@@ -1,11 +1,33 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import React, { useLayoutEffect, useState } from "react";
+import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { collection, addDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { signOut } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { colors, spacing, radius } from "../theme";
 
 export default function CreateEventScreen({ navigation }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerBackVisible: false,
+      headerRight: () => (
+        <Pressable onPress={handleLogout}>
+          <Text style={styles.headerLogout}>Logout</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.replace("Login");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   const handleCreateEvent = async () => {
     try {
@@ -30,6 +52,7 @@ export default function CreateEventScreen({ navigation }) {
 
       <TextInput
         placeholder="Event title"
+        placeholderTextColor={colors.muted}
         style={styles.input}
         value={title}
         onChangeText={setTitle}
@@ -37,15 +60,22 @@ export default function CreateEventScreen({ navigation }) {
 
       <TextInput
         placeholder="Event description"
+        placeholderTextColor={colors.muted}
         style={styles.input}
         value={description}
         onChangeText={setDescription}
       />
 
-      <Button title="Create Event" onPress={handleCreateEvent} />
+      <Pressable style={styles.primaryButton} onPress={handleCreateEvent}>
+        <Text style={styles.primaryButtonText}>Create Event</Text>
+      </Pressable>
 
-      <View style={{ marginTop: 10 }} />
-      <Button title="View Events" onPress={() => navigation.navigate("Events")} />
+      <Pressable
+        style={styles.secondaryButton}
+        onPress={() => navigation.navigate("Events")}
+      >
+        <Text style={styles.secondaryButtonText}>View Events</Text>
+      </Pressable>
     </View>
   );
 }
@@ -53,20 +83,53 @@ export default function CreateEventScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: "center",
-    padding: 20,
+    padding: spacing.lg,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "bold",
-    marginBottom: 30,
+    color: colors.text,
     textAlign: "center",
+    marginBottom: spacing.lg,
   },
   input: {
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: 14,
+    marginBottom: spacing.md,
+    color: colors.text,
+  },
+  primaryButton: {
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: 15,
+    borderRadius: radius.md,
+    alignItems: "center",
+    marginTop: spacing.md,
+  },
+  secondaryButtonText: {
+    color: colors.primary,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  headerLogout: {
+    color: colors.primary,
+    fontWeight: "bold",
+    marginRight: 10,
   },
 });
