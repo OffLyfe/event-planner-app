@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Button, ScrollView } from "react-native";
 import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
+import { colors } from "./theme";
 
 export default function EventList() {
   const [events, setEvents] = useState([]);
@@ -39,7 +40,10 @@ export default function EventList() {
           <View key={event.id} style={styles.card}>
             <Text style={styles.eventTitle}>{event.title}</Text>
             <Text style={styles.description}>{event.description}</Text>
-
+            <Text style={styles.infoText}>📍 {event.location}</Text>
+            <Text style={styles.infoText}>
+              📅 {event.date} • 🕒 {event.time}
+            </Text>
             <View style={{ marginTop: 10 }} />
             <Button title="Delete" onPress={() => handleDeleteEvent(event.id)} />
           </View>
@@ -64,6 +68,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: "#666",
+  },
+
+  infoText: {
+    color: colors.muted,
+    marginTop: 4,
   },
 
   card: {
