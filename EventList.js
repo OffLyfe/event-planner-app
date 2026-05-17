@@ -1,12 +1,5 @@
 import { useEffect, useState, useLayoutEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Button,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 
 import {
   collection,
@@ -117,48 +110,54 @@ export default function EventList({ navigation }) {
       {events.length === 0 ? (
         <Text style={styles.emptyText}>No events yet.</Text>
       ) : (
-        events.map((event) => (
-          <View key={event.id} style={styles.card}>
-            <Text style={styles.eventTitle}>{event.title}</Text>
+        events.map((event) => {
+          const isGoing = event.participants?.includes(auth.currentUser?.uid);
 
-            <Text style={styles.description}>{event.description}</Text>
+          return (
+            <View key={event.id} style={styles.card}>
+              <Text style={styles.eventTitle}>{event.title}</Text>
 
-            <Text style={styles.infoText}>📍 {event.location}</Text>
+              <Text style={styles.description}>{event.description}</Text>
 
-            <Text style={styles.infoText}>
-              📅 {event.date} • 🕒 {event.time}
-            </Text>
+              <Text style={styles.infoText}>📍 {event.location}</Text>
 
-            <Text style={styles.infoText}>
-              👥 {event.participants?.length || 0} going
-            </Text>
+              <Text style={styles.infoText}>
+                📅 {event.date} • 🕒 {event.time}
+              </Text>
 
-            <View style={{ marginTop: 10 }} />
+              <Text style={styles.infoText}>
+                👥 {event.participants?.length || 0} going
+              </Text>
 
-            {event.createdBy === auth.currentUser?.uid && (
-              <>
-                <Button
-                  title="Delete"
-                  onPress={() => handleDeleteEvent(event.id)}
-                />
+              <View style={styles.buttonRow}>
+                {isGoing ? (
+                  <Pressable
+                    style={[styles.actionButton, styles.leaveButton]}
+                    onPress={() => handleLeaveEvent(event.id)}
+                  >
+                    <Text style={styles.actionButtonText}>Leave</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    style={[styles.actionButton, styles.joinButton]}
+                    onPress={() => handleJoinEvent(event.id)}
+                  >
+                    <Text style={styles.actionButtonText}>I'm Going</Text>
+                  </Pressable>
+                )}
 
-                <View style={{ marginTop: 10 }} />
-              </>
-            )}
-
-            {event.participants?.includes(auth.currentUser?.uid) ? (
-              <Button
-                title="Leave"
-                onPress={() => handleLeaveEvent(event.id)}
-              />
-            ) : (
-              <Button
-                title="I'm Going"
-                onPress={() => handleJoinEvent(event.id)}
-              />
-            )}
-          </View>
-        ))
+                {event.createdBy === auth.currentUser?.uid && (
+                  <Pressable
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDeleteEvent(event.id)}
+                  >
+                    <Text style={styles.actionButtonText}>Delete</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          );
+        })
       )}
     </ScrollView>
   );
@@ -232,5 +231,35 @@ const styles = StyleSheet.create({
   infoText: {
     color: colors.muted,
     marginTop: 4,
+  },
+
+  buttonRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+
+  actionButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+
+  joinButton: {
+    backgroundColor: colors.primary,
+  },
+
+  leaveButton: {
+    backgroundColor: colors.danger,
+  },
+
+  deleteButton: {
+    backgroundColor: "#111827",
+  },
+
+  actionButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
