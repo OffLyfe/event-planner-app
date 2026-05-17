@@ -10,19 +10,22 @@ import {
 
 import {
   addDoc,
+  arrayRemove,
+  arrayUnion,
   collection,
   doc,
-  getDoc,
   onSnapshot,
+  getDoc,
   orderBy,
   query,
+  updateDoc,
 } from "firebase/firestore";
 
 import { auth, db } from "../firebaseConfig";
 import { colors, spacing, radius } from "../theme";
 
 export default function EventDetailScreen({ route }) {
-  const { eventId } = route.params;
+  const eventId = route?.params?.eventId;
 
   const [event, setEvent] = useState(null);
   const [message, setMessage] = useState("");
@@ -32,18 +35,20 @@ export default function EventDetailScreen({ route }) {
   const chatScrollRef = useRef(null);
 
   useEffect(() => {
-    const loadEvent = async () => {
-      const eventDoc = await getDoc(doc(db, "events", eventId));
+    if (!eventId) return;
 
+    const eventRef = doc(db, "events", eventId);
+
+    const unsubscribe = onSnapshot(eventRef, (eventDoc) => {
       if (eventDoc.exists()) {
         setEvent({
           id: eventDoc.id,
           ...eventDoc.data(),
         });
       }
-    };
+    });
 
-    loadEvent();
+    return unsubscribe;
   }, [eventId]);
 
   useEffect(() => {
@@ -63,6 +68,8 @@ export default function EventDetailScreen({ route }) {
   }, []);
 
   useEffect(() => {
+    if (!eventId) return;
+
     const messagesQuery = query(
       collection(db, "events", eventId, "messages"),
       orderBy("createdAt", "asc")
@@ -88,6 +95,32 @@ export default function EventDetailScreen({ route }) {
     }
   }, [messages]);
 
+  const handleJoinEvent = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
+
+    await updateDoc(doc(db, "events", eventId), {
+      participants: arrayUnion(user.uid),
+    });
+  };
+
+  const handleLeaveEvent = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
+
+    await updateDoc(doc(db, "events", eventId), {
+      participants: arrayRemove(user.uid),
+    });
+  };
+
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
@@ -108,6 +141,14 @@ export default function EventDetailScreen({ route }) {
 
     setMessage("");
   };
+
+  if (!eventId) {
+    return (
+      <View style={styles.container}>
+        <Text>Event was not found.</Text>
+      </View>
+    );
+  }
 
   if (!event) {
     return (
@@ -139,6 +180,18 @@ export default function EventDetailScreen({ route }) {
         <Text style={styles.infoText}>
           👥 {event.participants?.length || 0} going
         </Text>
+
+        <Pressable
+          style={[
+            styles.joinButton,
+            isParticipant ? styles.leaveButton : styles.goingButton,
+          ]}
+          onPress={isParticipant ? handleLeaveEvent : handleJoinEvent}
+        >
+          <Text style={styles.joinButtonText}>
+            {isParticipant ? "Leave Event" : "I'm Going"}
+          </Text>
+        </Pressable>
       </View>
 
       <View style={styles.card}>
@@ -257,6 +310,22 @@ const styles = StyleSheet.create({
   infoText: {
     color: colors.muted,
     marginTop: 4,
+  },
+  joinButton: {
+    padding: 14,
+    borderRadius: radius.md,
+    alignItems: "center",
+    marginTop: spacing.lg,
+  },
+  goingButton: {
+    backgroundColor: colors.primary,
+  },
+  leaveButton: {
+    backgroundColor: colors.danger,
+  },
+  joinButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   sectionTitle: {
     fontSize: 22,
