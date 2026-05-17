@@ -11,6 +11,7 @@ import {
 import {
   addDoc,
   arrayUnion,
+  arrayRemove,
   collection,
   doc,
   getDoc,
@@ -118,6 +119,29 @@ export default function FriendsScreen({ navigation }) {
       await updateDoc(doc(db, "friendRequests", requestId), {
         status: "declined",
       });
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const unfriendUser = async (friendId) => {
+    try {
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        alert("Please log in first.");
+        return;
+      }
+
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        friends: arrayRemove(friendId),
+      });
+
+      await updateDoc(doc(db, "users", friendId), {
+        friends: arrayRemove(currentUser.uid),
+      });
+
+      alert("Friend removed.");
     } catch (error) {
       alert(error.message);
     }
@@ -259,6 +283,13 @@ export default function FriendsScreen({ navigation }) {
                 <Text style={styles.friendName}>{friend.name}</Text>
                 <Text style={styles.mutedText}>@{friend.username}</Text>
 
+                <Pressable
+                  style={styles.unfriendButton}
+                  onPress={() => unfriendUser(friend.id)}
+                >
+                  <Text style={styles.unfriendButtonText}>Unfriend</Text>
+                </Pressable>
+
                 <Text style={styles.goingTitle}>Going to:</Text>
 
                 {friendEvents.length === 0 ? (
@@ -297,12 +328,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
+
   title: {
     fontSize: 30,
     fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.lg,
   },
+
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -311,12 +344,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: spacing.md,
   },
+
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.md,
   },
+
   input: {
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -326,62 +361,89 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     color: colors.text,
   },
+
   primaryButton: {
     backgroundColor: colors.primary,
     padding: 14,
     borderRadius: radius.md,
     alignItems: "center",
   },
+
   primaryButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
+
   mutedText: {
     color: colors.muted,
   },
+
   requestBox: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: spacing.md,
     marginTop: spacing.md,
   },
+
   friendBox: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: spacing.md,
     marginTop: spacing.md,
   },
+
   friendName: {
     color: colors.text,
     fontWeight: "bold",
     fontSize: 16,
   },
+
   row: {
     flexDirection: "row",
     gap: 10,
     marginTop: spacing.md,
   },
+
   smallButton: {
     flex: 1,
     padding: 12,
     borderRadius: radius.md,
     alignItems: "center",
   },
+
   acceptButton: {
     backgroundColor: colors.primary,
   },
+
   declineButton: {
     backgroundColor: colors.danger,
   },
+
   smallButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
+
+  unfriendButton: {
+    borderWidth: 1,
+    borderColor: colors.danger,
+    padding: 10,
+    borderRadius: radius.md,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+
+  unfriendButtonText: {
+    color: colors.danger,
+    fontWeight: "bold",
+  },
+
   goingTitle: {
     marginTop: spacing.sm,
     fontWeight: "bold",
     color: colors.text,
   },
+
   eventItemBox: {
     marginTop: spacing.sm,
     padding: 12,
@@ -390,10 +452,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+
   eventItemTitle: {
     color: colors.text,
     fontWeight: "bold",
   },
+
   eventItemMeta: {
     color: colors.muted,
     marginTop: 4,
