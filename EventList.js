@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { collection, onSnapshot } from "firebase/firestore";
+import { View, Text, StyleSheet, Button } from "react-native";
+import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 export default function EventList() {
   const [events, setEvents] = useState([]);
+
+  const handleDeleteEvent = async (id) => {
+    try {
+      await deleteDoc(doc(db, "events", id));
+      alert("Event deleted!");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "events"), (snapshot) => {
@@ -27,6 +36,9 @@ export default function EventList() {
         <View key={event.id} style={styles.card}>
           <Text style={styles.eventTitle}>{event.title}</Text>
           <Text>{event.description}</Text>
+
+          <View style={{ marginTop: 10 }} />
+          <Button title="Delete" onPress={() => handleDeleteEvent(event.id)} />
         </View>
       ))}
     </View>
