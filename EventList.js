@@ -1,5 +1,11 @@
 import { useEffect, useState, useLayoutEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+} from "react-native";
 
 import {
   collection,
@@ -99,27 +105,42 @@ export default function EventList({ navigation }) {
       <View style={styles.topRow}>
         <Text style={styles.title}>Events</Text>
 
-        <Pressable
-          style={styles.createButton}
-          onPress={() => navigation.navigate("Create Event")}
-        >
-          <Text style={styles.createButtonText}>+ Create</Text>
-        </Pressable>
+        <View style={styles.topButtons}>
+          <Pressable
+            style={styles.friendsButton}
+            onPress={() => navigation.navigate("Friends")}
+          >
+            <Text style={styles.friendsButtonText}>Friends</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.createButton}
+            onPress={() => navigation.navigate("Create Event")}
+          >
+            <Text style={styles.createButtonText}>+ Create</Text>
+          </Pressable>
+        </View>
       </View>
 
       {events.length === 0 ? (
         <Text style={styles.emptyText}>No events yet.</Text>
       ) : (
         events.map((event) => {
-          const isGoing = event.participants?.includes(auth.currentUser?.uid);
+          const isGoing = event.participants?.includes(
+            auth.currentUser?.uid
+          );
 
           return (
             <View key={event.id} style={styles.card}>
               <Text style={styles.eventTitle}>{event.title}</Text>
 
-              <Text style={styles.description}>{event.description}</Text>
+              <Text style={styles.description}>
+                {event.description}
+              </Text>
 
-              <Text style={styles.infoText}>📍 {event.location}</Text>
+              <Text style={styles.infoText}>
+                📍 {event.location}
+              </Text>
 
               <Text style={styles.infoText}>
                 📅 {event.date} • 🕒 {event.time}
@@ -135,14 +156,18 @@ export default function EventList({ navigation }) {
                     style={[styles.actionButton, styles.leaveButton]}
                     onPress={() => handleLeaveEvent(event.id)}
                   >
-                    <Text style={styles.actionButtonText}>Leave</Text>
+                    <Text style={styles.actionButtonText}>
+                      Leave
+                    </Text>
                   </Pressable>
                 ) : (
                   <Pressable
                     style={[styles.actionButton, styles.joinButton]}
                     onPress={() => handleJoinEvent(event.id)}
                   >
-                    <Text style={styles.actionButtonText}>I'm Going</Text>
+                    <Text style={styles.actionButtonText}>
+                      I'm Going
+                    </Text>
                   </Pressable>
                 )}
 
@@ -151,7 +176,9 @@ export default function EventList({ navigation }) {
                     style={[styles.actionButton, styles.deleteButton]}
                     onPress={() => handleDeleteEvent(event.id)}
                   >
-                    <Text style={styles.actionButtonText}>Delete</Text>
+                    <Text style={styles.actionButtonText}>
+                      Delete
+                    </Text>
                   </Pressable>
                 )}
               </View>
@@ -177,6 +204,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  topButtons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -192,6 +224,19 @@ const styles = StyleSheet.create({
 
   createButtonText: {
     color: "#fff",
+    fontWeight: "bold",
+  },
+
+  friendsButton: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+  },
+
+  friendsButtonText: {
+    color: colors.primary,
     fontWeight: "bold",
   },
 
