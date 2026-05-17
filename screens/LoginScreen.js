@@ -29,8 +29,12 @@ export default function LoginScreen({ navigation }) {
         createdAt: new Date(),
       });
 
-      alert("Account created!");
-      navigation.navigate("Create Event");
+      alert("Account created! Please log in.");
+
+      setName("");
+      setEmail("");
+      setPassword("");
+      setIsRegister(false);
     } catch (error) {
       alert(error.message);
     }
@@ -39,7 +43,11 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate("Create Event");
+
+      setEmail("");
+      setPassword("");
+
+      navigation.replace("Events");
     } catch (error) {
       alert(error.message);
     }
@@ -49,9 +57,11 @@ export default function LoginScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.logo}>🎉</Text>
+
         <Text style={styles.title}>
           {isRegister ? "Create account" : "Welcome back"}
         </Text>
+
         <Text style={styles.subtitle}>
           {isRegister
             ? "Create your profile and start planning events."
@@ -74,6 +84,7 @@ export default function LoginScreen({ navigation }) {
           style={styles.input}
           value={email}
           onChangeText={setEmail}
+          autoCapitalize="none"
         />
 
         <TextInput

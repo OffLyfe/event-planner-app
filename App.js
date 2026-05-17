@@ -14,8 +14,14 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen name="Login" component={LoginScreen} />
+
+        <Stack.Screen
+          name="Events"
+          component={EventList}
+          options={{ headerBackVisible: false }}
+        />
+
         <Stack.Screen name="Create Event" component={CreateEventScreen} />
-        <Stack.Screen name="Events" component={EventList} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Button, ScrollView } from "react-native";
+import { useEffect, useState, useLayoutEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  ScrollView,
+  Pressable,
+} from "react-native";
 
 import {
   collection,
@@ -11,11 +18,32 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 
+import { signOut } from "firebase/auth";
 import { db, auth } from "./firebaseConfig";
-import { colors } from "./theme";
+import { colors, spacing, radius } from "./theme";
 
-export default function EventList() {
+export default function EventList({ navigation }) {
   const [events, setEvents] = useState([]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.replace("Login");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerBackVisible: false,
+      headerRight: () => (
+        <Pressable onPress={handleLogout}>
+          <Text style={styles.headerLogout}>Logout</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation]);
 
   const handleDeleteEvent = async (id) => {
     try {
@@ -75,7 +103,16 @@ export default function EventList() {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Events</Text>
+      <View style={styles.topRow}>
+        <Text style={styles.title}>Events</Text>
+
+        <Pressable
+          style={styles.createButton}
+          onPress={() => navigation.navigate("Create Event")}
+        >
+          <Text style={styles.createButtonText}>+ Create</Text>
+        </Pressable>
+      </View>
 
       {events.length === 0 ? (
         <Text style={styles.emptyText}>No events yet.</Text>
@@ -130,38 +167,66 @@ export default function EventList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     padding: 20,
+  },
+
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
   },
 
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 20,
+    color: colors.text,
+  },
+
+  createButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+  },
+
+  createButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  headerLogout: {
+    color: colors.primary,
+    fontWeight: "bold",
+    marginRight: 10,
   },
 
   emptyText: {
     fontSize: 16,
-    color: "#666",
+    color: colors.muted,
   },
 
   card: {
     padding: 15,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     marginBottom: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.card,
   },
 
   eventTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 5,
+    color: colors.text,
   },
 
   description: {
     fontSize: 15,
     marginBottom: 8,
+    color: colors.text,
   },
 
   infoText: {
