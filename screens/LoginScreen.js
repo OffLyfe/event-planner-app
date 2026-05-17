@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { auth, db } from "../firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { colors, spacing, radius } from "../theme";
 
 import {
@@ -12,11 +12,31 @@ import {
 export default function LoginScreen({ navigation }) {
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
     try {
+      if (!name.trim() || !username.trim() || !email.trim() || !password.trim()) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const cleanUsername = username.trim().toLowerCase();
+
+      const usernameQuery = query(
+        collection(db, "users"),
+        where("username", "==", cleanUsername)
+      );
+
+      const usernameSnapshot = await getDocs(usernameQuery);
+
+      if (!usernameSnapshot.empty) {
+        alert("Username is already taken.");
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -24,14 +44,17 @@ export default function LoginScreen({ navigation }) {
       );
 
       await setDoc(doc(db, "users", userCredential.user.uid), {
-        name,
-        email,
+        name: name.trim(),
+        username: cleanUsername,
+        email: email.trim().toLowerCase(),
+        friends: [],
         createdAt: new Date(),
       });
 
       alert("Account created! Please log in.");
 
       setName("");
+      setUsername("");
       setEmail("");
       setPassword("");
       setIsRegister(false);
@@ -69,13 +92,24 @@ export default function LoginScreen({ navigation }) {
         </Text>
 
         {isRegister && (
-          <TextInput
-            placeholder="Name"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-          />
+          <>
+            <TextInput
+              placeholder="Name"
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+            />
+
+            <TextInput
+              placeholder="Username"
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+            />
+          </>
         )}
 
         <TextInput
