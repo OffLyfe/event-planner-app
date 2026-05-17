@@ -1,230 +1,264 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
+  orderBy,
   query,
   updateDoc,
-  where,
 } from "firebase/firestore";
 
 import { auth, db } from "../firebaseConfig";
 import { colors, spacing, radius } from "../theme";
 
-export default function FriendsScreen() {
-  const [username, setUsername] = useState("");
-  const [incomingRequests, setIncomingRequests] = useState([]);
-  const [friends, setFriends] = useState([]);
+export default function EventDetailScreen({ route }) {
+  const { eventId } = route.params;
 
-  const sendFriendRequest = async () => {
-    try {
-      const currentUser = auth.currentUser;
+  const [event, setEvent] = useState(null);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [currentUserProfile, setCurrentUserProfile] = useState(null);
 
-      if (!currentUser) {
-        alert("Please log in first.");
-        return;
-      }
-
-      if (!username.trim()) {
-        alert("Enter username.");
-        return;
-      }
-
-      const cleanUsername = username.trim().toLowerCase();
-
-      const userQuery = query(
-        collection(db, "users"),
-        where("username", "==", cleanUsername)
-      );
-
-      const userSnapshot = await getDocs(userQuery);
-
-      if (userSnapshot.empty) {
-        alert("User not found.");
-        return;
-      }
-
-      const targetDoc = userSnapshot.docs[0];
-      const targetUid = targetDoc.id;
-
-      if (targetUid === currentUser.uid) {
-        alert("You cannot add yourself.");
-        return;
-      }
-
-      const currentUserDoc = await getDoc(doc(db, "users", currentUser.uid));
-      const currentUserData = currentUserDoc.data();
-
-      await addDoc(collection(db, "friendRequests"), {
-        fromUid: currentUser.uid,
-        fromName: currentUserData.name,
-        fromUsername: currentUserData.username,
-        toUid: targetUid,
-        status: "pending",
-        createdAt: new Date(),
-      });
-
-      alert("Friend request sent.");
-      setUsername("");
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  const acceptRequest = async (request) => {
-    try {
-      const currentUser = auth.currentUser;
-
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        friends: arrayUnion(request.fromUid),
-      });
-
-      await updateDoc(doc(db, "users", request.fromUid), {
-        friends: arrayUnion(currentUser.uid),
-      });
-
-      await updateDoc(doc(db, "friendRequests", request.id), {
-        status: "accepted",
-      });
-
-      alert("Friend added.");
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  const declineRequest = async (requestId) => {
-    try {
-      await updateDoc(doc(db, "friendRequests", requestId), {
-        status: "declined",
-      });
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+  const chatScrollRef = useRef(null);
 
   useEffect(() => {
-    const currentUser = auth.currentUser;
+    const eventRef = doc(db, "events", eventId);
 
-    if (!currentUser) return;
+    const unsubscribe = onSnapshot(eventRef, (eventDoc) => {
+      if (eventDoc.exists()) {
+        setEvent({
+          id: eventDoc.id,
+          ...eventDoc.data(),
+        });
+      }
+    });
 
-    const requestsQuery = query(
-      collection(db, "friendRequests"),
-      where("toUid", "==", currentUser.uid)
+    return unsubscribe;
+  }, [eventId]);
+
+  useEffect(() => {
+    const loadCurrentUserProfile = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (userDoc.exists()) {
+        setCurrentUserProfile(userDoc.data());
+      }
+    };
+
+    loadCurrentUserProfile();
+  }, []);
+
+  useEffect(() => {
+    const messagesQuery = query(
+      collection(db, "events", eventId, "messages"),
+      orderBy("createdAt", "asc")
     );
 
-    const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
-      const requestsData = snapshot.docs
-        .map((docItem) => ({
-          id: docItem.id,
-          ...docItem.data(),
-        }))
-        .filter((request) => request.status === "pending");
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const messagesData = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
+      }));
 
-      setIncomingRequests(requestsData);
+      setMessages(messagesData);
     });
 
-    const unsubscribeUser = onSnapshot(doc(db, "users", currentUser.uid), async (userDoc) => {
-      const userData = userDoc.data();
+    return unsubscribe;
+  }, [eventId]);
 
-      if (!userData?.friends || userData.friends.length === 0) {
-        setFriends([]);
-        return;
-      }
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        chatScrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
 
-      const friendProfiles = [];
+  const handleJoinEvent = async () => {
+    const user = auth.currentUser;
 
-      for (const friendUid of userData.friends) {
-        const friendDoc = await getDoc(doc(db, "users", friendUid));
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
 
-        if (friendDoc.exists()) {
-          friendProfiles.push({
-            id: friendUid,
-            ...friendDoc.data(),
-          });
-        }
-      }
+    await updateDoc(doc(db, "events", eventId), {
+      participants: arrayUnion(user.uid),
+    });
+  };
 
-      setFriends(friendProfiles);
+  const handleLeaveEvent = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
+
+    await updateDoc(doc(db, "events", eventId), {
+      participants: arrayRemove(user.uid),
+    });
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
+
+    await addDoc(collection(db, "events", eventId, "messages"), {
+      text: message.trim(),
+      senderUid: user.uid,
+      senderUsername:
+        currentUserProfile?.username || currentUserProfile?.name || "User",
+      createdAt: new Date(),
     });
 
-    return () => {
-      unsubscribeRequests();
-      unsubscribeUser();
-    };
-  }, []);
+    setMessage("");
+  };
+
+  if (!event) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading event...</Text>
+      </View>
+    );
+  }
+
+  const isParticipant = event.participants?.includes(auth.currentUser?.uid);
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Friends</Text>
-
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Add friend</Text>
+        <Text style={styles.title}>{event.title}</Text>
 
-        <TextInput
-          placeholder="Enter username"
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-        />
+        <Text style={styles.creatorText}>
+          Created by @{event.creatorName || "unknown"}
+        </Text>
 
-        <Pressable style={styles.primaryButton} onPress={sendFriendRequest}>
-          <Text style={styles.primaryButtonText}>Send request</Text>
+        <Text style={styles.description}>{event.description}</Text>
+
+        <Text style={styles.infoText}>📍 {event.location}</Text>
+
+        <Text style={styles.infoText}>
+          📅 {event.date} • 🕒 {event.time}
+        </Text>
+
+        <Text style={styles.infoText}>
+          👥 {event.participants?.length || 0} going
+        </Text>
+
+        <Pressable
+          style={[
+            styles.joinButton,
+            isParticipant ? styles.leaveButton : styles.goingButton,
+          ]}
+          onPress={isParticipant ? handleLeaveEvent : handleJoinEvent}
+        >
+          <Text style={styles.joinButtonText}>
+            {isParticipant ? "Leave Event" : "I'm Going"}
+          </Text>
         </Pressable>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Friend requests</Text>
+        <Text style={styles.sectionTitle}>Event Chat</Text>
 
-        {incomingRequests.length === 0 ? (
-          <Text style={styles.mutedText}>No incoming requests.</Text>
+        {!isParticipant ? (
+          <Text style={styles.mutedText}>Join this event to access chat.</Text>
         ) : (
-          incomingRequests.map((request) => (
-            <View key={request.id} style={styles.requestBox}>
-              <Text style={styles.friendName}>
-                {request.fromName} (@{request.fromUsername})
-              </Text>
+          <>
+            {messages.length === 0 ? (
+              <Text style={styles.mutedText}>No messages yet.</Text>
+            ) : (
+              <ScrollView
+                ref={chatScrollRef}
+                style={styles.chatList}
+                nestedScrollEnabled
+              >
+                {messages.map((item) => {
+                  const isMine = item.senderUid === auth.currentUser?.uid;
 
-              <View style={styles.row}>
-                <Pressable
-                  style={[styles.smallButton, styles.acceptButton]}
-                  onPress={() => acceptRequest(request)}
-                >
-                  <Text style={styles.smallButtonText}>Accept</Text>
-                </Pressable>
+                  return (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.messageWrapper,
+                        isMine
+                          ? styles.myMessageWrapper
+                          : styles.otherMessageWrapper,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isMine
+                            ? styles.myMessageBubble
+                            : styles.otherMessageBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageSender,
+                            isMine
+                              ? styles.myMessageSender
+                              : styles.otherMessageSender,
+                          ]}
+                        >
+                          @{item.senderUsername || "user"}
+                        </Text>
 
-                <Pressable
-                  style={[styles.smallButton, styles.declineButton]}
-                  onPress={() => declineRequest(request.id)}
-                >
-                  <Text style={styles.smallButtonText}>Decline</Text>
-                </Pressable>
-              </View>
+                        <Text
+                          style={[
+                            styles.messageText,
+                            isMine
+                              ? styles.myMessageText
+                              : styles.otherMessageText,
+                          ]}
+                        >
+                          {item.text}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            )}
+
+            <View style={styles.inputRow}>
+              <TextInput
+                placeholder="Write a message..."
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={message}
+                onChangeText={setMessage}
+              />
+
+              <Pressable style={styles.sendButton} onPress={handleSendMessage}>
+                <Text style={styles.sendButtonText}>Send</Text>
+              </Pressable>
             </View>
-          ))
-        )}
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>My friends</Text>
-
-        {friends.length === 0 ? (
-          <Text style={styles.mutedText}>No friends yet.</Text>
-        ) : (
-          friends.map((friend) => (
-            <View key={friend.id} style={styles.friendBox}>
-              <Text style={styles.friendName}>{friend.name}</Text>
-              <Text style={styles.mutedText}>@{friend.username}</Text>
-            </View>
-          ))
+          </>
         )}
       </View>
     </ScrollView>
@@ -238,13 +272,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
 
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: spacing.lg,
-  },
-
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -254,81 +281,142 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
-  sectionTitle: {
-    fontSize: 20,
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
     color: colors.text,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
 
-  input: {
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 14,
-    marginBottom: spacing.md,
+  creatorText: {
+    color: colors.muted,
+    marginBottom: spacing.sm,
+  },
+
+  description: {
+    fontSize: 15,
     color: colors.text,
+    marginBottom: spacing.md,
   },
 
-  primaryButton: {
-    backgroundColor: colors.primary,
+  infoText: {
+    color: colors.muted,
+    marginTop: 4,
+  },
+
+  joinButton: {
     padding: 14,
     borderRadius: radius.md,
     alignItems: "center",
+    marginTop: spacing.lg,
   },
 
-  primaryButtonText: {
+  goingButton: {
+    backgroundColor: colors.primary,
+  },
+
+  leaveButton: {
+    backgroundColor: colors.danger,
+  },
+
+  joinButtonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: colors.text,
+    marginBottom: spacing.md,
   },
 
   mutedText: {
     color: colors.muted,
   },
 
-  requestBox: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.md,
-    marginTop: spacing.md,
+  chatList: {
+    height: 300,
+    marginBottom: spacing.md,
   },
 
-  friendBox: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.md,
-    marginTop: spacing.md,
+  messageWrapper: {
+    marginBottom: spacing.sm,
   },
 
-  friendName: {
-    color: colors.text,
+  myMessageWrapper: {
+    alignItems: "flex-end",
+  },
+
+  otherMessageWrapper: {
+    alignItems: "flex-start",
+  },
+
+  messageBubble: {
+    maxWidth: "85%",
+    borderRadius: radius.md,
+    padding: 12,
+  },
+
+  myMessageBubble: {
+    backgroundColor: colors.primary,
+  },
+
+  otherMessageBubble: {
+    backgroundColor: "#F3F4F6",
+  },
+
+  messageSender: {
+    fontSize: 12,
+    marginBottom: 4,
     fontWeight: "bold",
-    fontSize: 16,
   },
 
-  row: {
+  myMessageSender: {
+    color: "#E0E7FF",
+  },
+
+  otherMessageSender: {
+    color: colors.muted,
+  },
+
+  messageText: {
+    fontSize: 15,
+  },
+
+  myMessageText: {
+    color: "#FFFFFF",
+  },
+
+  otherMessageText: {
+    color: colors.text,
+  },
+
+  inputRow: {
     flexDirection: "row",
     gap: 10,
     marginTop: spacing.md,
   },
 
-  smallButton: {
+  input: {
     flex: 1,
-    padding: 12,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
+    padding: 14,
+    color: colors.text,
+  },
+
+  sendButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    justifyContent: "center",
     alignItems: "center",
   },
 
-  acceptButton: {
-    backgroundColor: colors.primary,
-  },
-
-  declineButton: {
-    backgroundColor: colors.danger,
-  },
-
-  smallButtonText: {
+  sendButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
