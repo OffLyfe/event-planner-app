@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
@@ -13,7 +13,6 @@ export default function CreateEventScreen({ navigation }) {
   const [location, setLocation] = useState("");
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-
   const [time, setTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -49,21 +48,21 @@ export default function CreateEventScreen({ navigation }) {
     }
 
     try {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      const userData = userDoc.data();
+
       await addDoc(collection(db, "events"), {
         title,
         description,
         location,
-
         date: date.toDateString(),
-
         time: time.toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
-
         participants: [],
         createdBy: auth.currentUser.uid,
-
+        creatorName: userData?.username || userData?.name || "unknown",
         createdAt: new Date(),
       });
 
@@ -72,7 +71,6 @@ export default function CreateEventScreen({ navigation }) {
       setTitle("");
       setDescription("");
       setLocation("");
-
       setDate(new Date());
       setTime(new Date());
 
@@ -110,13 +108,8 @@ export default function CreateEventScreen({ navigation }) {
         onChangeText={setLocation}
       />
 
-      <Pressable
-        style={styles.dateButton}
-        onPress={() => setShowPicker(true)}
-      >
-        <Text style={styles.dateButtonText}>
-          📅 {date.toDateString()}
-        </Text>
+      <Pressable style={styles.dateButton} onPress={() => setShowPicker(true)}>
+        <Text style={styles.dateButtonText}>📅 {date.toDateString()}</Text>
       </Pressable>
 
       <Pressable
@@ -158,22 +151,15 @@ export default function CreateEventScreen({ navigation }) {
         onCancel={() => setShowTimePicker(false)}
       />
 
-      <Pressable
-        style={styles.primaryButton}
-        onPress={handleCreateEvent}
-      >
-        <Text style={styles.primaryButtonText}>
-          Create Event
-        </Text>
+      <Pressable style={styles.primaryButton} onPress={handleCreateEvent}>
+        <Text style={styles.primaryButtonText}>Create Event</Text>
       </Pressable>
 
       <Pressable
         style={styles.secondaryButton}
         onPress={() => navigation.navigate("Events")}
       >
-        <Text style={styles.secondaryButtonText}>
-          View Events
-        </Text>
+        <Text style={styles.secondaryButtonText}>View Events</Text>
       </Pressable>
     </View>
   );
@@ -186,7 +172,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
   },
-
   title: {
     fontSize: 30,
     fontWeight: "bold",
@@ -194,7 +179,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: spacing.lg,
   },
-
   input: {
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -204,7 +188,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     color: colors.text,
   },
-
   dateButton: {
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -213,24 +196,20 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: spacing.md,
   },
-
   dateButtonText: {
     color: colors.text,
   },
-
   primaryButton: {
     backgroundColor: colors.primary,
     padding: 15,
     borderRadius: radius.md,
     alignItems: "center",
   },
-
   primaryButtonText: {
     color: "#FFFFFF",
     fontWeight: "bold",
     fontSize: 16,
   },
-
   secondaryButton: {
     borderWidth: 1,
     borderColor: colors.primary,
@@ -239,13 +218,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.md,
   },
-
   secondaryButtonText: {
     color: colors.primary,
     fontWeight: "bold",
     fontSize: 16,
   },
-
   headerLogout: {
     color: colors.primary,
     fontWeight: "bold",

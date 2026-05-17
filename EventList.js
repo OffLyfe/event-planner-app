@@ -13,7 +13,7 @@ import {
 
 import { signOut } from "firebase/auth";
 import { db, auth } from "./firebaseConfig";
-import { colors, spacing, radius } from "./theme";
+import { colors, radius } from "./theme";
 
 export default function EventList({ navigation }) {
   const [events, setEvents] = useState([]);
@@ -132,6 +132,10 @@ export default function EventList({ navigation }) {
             >
               <Text style={styles.eventTitle}>{event.title}</Text>
 
+              <Text style={styles.creatorText}>
+                Created by @{event.creatorName || "unknown"}
+              </Text>
+
               <Text style={styles.description}>{event.description}</Text>
 
               <Text style={styles.infoText}>📍 {event.location}</Text>
@@ -184,37 +188,31 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: 20,
   },
-
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
   },
-
   topButtons: {
     flexDirection: "row",
     gap: 10,
   },
-
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: colors.text,
   },
-
   createButton: {
     backgroundColor: colors.primary,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: radius.md,
   },
-
   createButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
-
   friendsButton: {
     borderWidth: 1,
     borderColor: colors.primary,
@@ -222,23 +220,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: radius.md,
   },
-
   friendsButtonText: {
     color: colors.primary,
     fontWeight: "bold",
   },
-
   headerLogout: {
     color: colors.primary,
     fontWeight: "bold",
     marginRight: 10,
   },
-
   emptyText: {
     fontSize: 16,
     color: colors.muted,
   },
-
   card: {
     padding: 15,
     borderWidth: 1,
@@ -247,50 +241,46 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: colors.card,
   },
-
   eventTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 4,
     color: colors.text,
   },
-
+  creatorText: {
+    color: colors.muted,
+    marginBottom: 8,
+    fontSize: 13,
+  },
   description: {
     fontSize: 15,
     marginBottom: 8,
     color: colors.text,
   },
-
   infoText: {
     color: colors.muted,
     marginTop: 4,
   },
-
   buttonRow: {
     flexDirection: "row",
     gap: 10,
     marginTop: 14,
   },
-
   actionButton: {
     flex: 1,
     padding: 12,
     borderRadius: radius.md,
     alignItems: "center",
   },
-
   joinButton: {
     backgroundColor: colors.primary,
   },
-
   leaveButton: {
     backgroundColor: colors.danger,
   },
-
   deleteButton: {
     backgroundColor: "#111827",
   },
-
   actionButtonText: {
     color: "#fff",
     fontWeight: "bold",

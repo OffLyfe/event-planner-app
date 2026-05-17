@@ -124,6 +124,10 @@ export default function EventDetailScreen({ route }) {
       <View style={styles.card}>
         <Text style={styles.title}>{event.title}</Text>
 
+        <Text style={styles.creatorText}>
+          Created by @{event.creatorName || "unknown"}
+        </Text>
+
         <Text style={styles.description}>{event.description}</Text>
 
         <Text style={styles.infoText}>📍 {event.location}</Text>
@@ -227,7 +231,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
-
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -236,99 +239,83 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: spacing.md,
   },
-
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.sm,
   },
-
+  creatorText: {
+    color: colors.muted,
+    marginBottom: spacing.sm,
+  },
   description: {
     fontSize: 15,
     color: colors.text,
     marginBottom: spacing.md,
   },
-
   infoText: {
     color: colors.muted,
     marginTop: 4,
   },
-
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.md,
   },
-
   mutedText: {
     color: colors.muted,
   },
-
   chatList: {
-    maxHeight: 300,
+    height: 300,
     marginBottom: spacing.md,
   },
-
   messageWrapper: {
     marginBottom: spacing.sm,
   },
-
   myMessageWrapper: {
     alignItems: "flex-end",
   },
-
   otherMessageWrapper: {
     alignItems: "flex-start",
   },
-
   messageBubble: {
     maxWidth: "85%",
     borderRadius: radius.md,
     padding: 12,
   },
-
   myMessageBubble: {
     backgroundColor: colors.primary,
   },
-
   otherMessageBubble: {
     backgroundColor: "#F3F4F6",
   },
-
   messageSender: {
     fontSize: 12,
     marginBottom: 4,
     fontWeight: "bold",
   },
-
   myMessageSender: {
     color: "#E0E7FF",
   },
-
   otherMessageSender: {
     color: colors.muted,
   },
-
   messageText: {
     fontSize: 15,
   },
-
   myMessageText: {
     color: "#FFFFFF",
   },
-
   otherMessageText: {
     color: colors.text,
   },
-
   inputRow: {
     flexDirection: "row",
     gap: 10,
     marginTop: spacing.md,
   },
-
   input: {
     flex: 1,
     backgroundColor: "#F9FAFB",
@@ -338,7 +325,6 @@ const styles = StyleSheet.create({
     padding: 14,
     color: colors.text,
   },
-
   sendButton: {
     backgroundColor: colors.primary,
     paddingHorizontal: 16,
@@ -346,7 +332,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   sendButtonText: {
     color: "#fff",
     fontWeight: "bold",
