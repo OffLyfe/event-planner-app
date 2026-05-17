@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Button } from "react-native";
+import { View, Text, StyleSheet, Button, ScrollView } from "react-native";
 import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
@@ -29,43 +29,58 @@ export default function EventList() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Events</Text>
 
-      {events.map((event) => (
-        <View key={event.id} style={styles.card}>
-          <Text style={styles.eventTitle}>{event.title}</Text>
-          <Text>{event.description}</Text>
+      {events.length === 0 ? (
+        <Text style={styles.emptyText}>No events yet.</Text>
+      ) : (
+        events.map((event) => (
+          <View key={event.id} style={styles.card}>
+            <Text style={styles.eventTitle}>{event.title}</Text>
+            <Text style={styles.description}>{event.description}</Text>
 
-          <View style={{ marginTop: 10 }} />
-          <Button title="Delete" onPress={() => handleDeleteEvent(event.id)} />
-        </View>
-      ))}
-    </View>
+            <View style={{ marginTop: 10 }} />
+            <Button title="Delete" onPress={() => handleDeleteEvent(event.id)} />
+          </View>
+        ))
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 30,
+    flex: 1,
+    padding: 20,
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: 20,
+  },
+
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
   },
 
   card: {
-    padding: 12,
+    padding: 15,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginBottom: 12,
   },
 
   eventTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
+    marginBottom: 5,
+  },
+
+  description: {
+    fontSize: 15,
   },
 });
