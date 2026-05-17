@@ -1,11 +1,5 @@
 import { useEffect, useState, useLayoutEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 
 import {
   collection,
@@ -126,21 +120,21 @@ export default function EventList({ navigation }) {
         <Text style={styles.emptyText}>No events yet.</Text>
       ) : (
         events.map((event) => {
-          const isGoing = event.participants?.includes(
-            auth.currentUser?.uid
-          );
+          const isGoing = event.participants?.includes(auth.currentUser?.uid);
 
           return (
-            <View key={event.id} style={styles.card}>
+            <Pressable
+              key={event.id}
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate("Event Detail", { eventId: event.id })
+              }
+            >
               <Text style={styles.eventTitle}>{event.title}</Text>
 
-              <Text style={styles.description}>
-                {event.description}
-              </Text>
+              <Text style={styles.description}>{event.description}</Text>
 
-              <Text style={styles.infoText}>
-                📍 {event.location}
-              </Text>
+              <Text style={styles.infoText}>📍 {event.location}</Text>
 
               <Text style={styles.infoText}>
                 📅 {event.date} • 🕒 {event.time}
@@ -156,18 +150,14 @@ export default function EventList({ navigation }) {
                     style={[styles.actionButton, styles.leaveButton]}
                     onPress={() => handleLeaveEvent(event.id)}
                   >
-                    <Text style={styles.actionButtonText}>
-                      Leave
-                    </Text>
+                    <Text style={styles.actionButtonText}>Leave</Text>
                   </Pressable>
                 ) : (
                   <Pressable
                     style={[styles.actionButton, styles.joinButton]}
                     onPress={() => handleJoinEvent(event.id)}
                   >
-                    <Text style={styles.actionButtonText}>
-                      I'm Going
-                    </Text>
+                    <Text style={styles.actionButtonText}>I'm Going</Text>
                   </Pressable>
                 )}
 
@@ -176,13 +166,11 @@ export default function EventList({ navigation }) {
                     style={[styles.actionButton, styles.deleteButton]}
                     onPress={() => handleDeleteEvent(event.id)}
                   >
-                    <Text style={styles.actionButtonText}>
-                      Delete
-                    </Text>
+                    <Text style={styles.actionButtonText}>Delete</Text>
                   </Pressable>
                 )}
               </View>
-            </View>
+            </Pressable>
           );
         })
       )}
