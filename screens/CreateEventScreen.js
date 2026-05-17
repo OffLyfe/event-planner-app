@@ -13,6 +13,7 @@ export default function CreateEventScreen({ navigation }) {
   const [location, setLocation] = useState("");
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
+
   const [time, setTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -37,17 +38,33 @@ export default function CreateEventScreen({ navigation }) {
   }, [navigation]);
 
   const handleCreateEvent = async () => {
+    if (!title.trim() || !location.trim()) {
+      alert("Please fill in title and location.");
+      return;
+    }
+
+    if (!auth.currentUser) {
+      alert("Please log in first.");
+      return;
+    }
+
     try {
       await addDoc(collection(db, "events"), {
         title,
         description,
         location,
+
         date: date.toDateString(),
-        createdAt: new Date(),
+
         time: time.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-}),
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+
+        participants: [],
+        createdBy: auth.currentUser.uid,
+
+        createdAt: new Date(),
       });
 
       alert("Event created!");
@@ -55,7 +72,9 @@ export default function CreateEventScreen({ navigation }) {
       setTitle("");
       setDescription("");
       setLocation("");
+
       setDate(new Date());
+      setTime(new Date());
 
       navigation.navigate("Events");
     } catch (error) {
@@ -91,57 +110,70 @@ export default function CreateEventScreen({ navigation }) {
         onChangeText={setLocation}
       />
 
-      <Pressable style={styles.dateButton} onPress={() => setShowPicker(true)}>
-        <Text style={styles.dateButtonText}>{date.toDateString()}</Text>
-      </Pressable>
-      
       <Pressable
-  style={styles.dateButton}
-  onPress={() => setShowTimePicker(true)}
->
-  <Text style={styles.dateButtonText}>
-    {time.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}
-  </Text>
-</Pressable>
+        style={styles.dateButton}
+        onPress={() => setShowPicker(true)}
+      >
+        <Text style={styles.dateButtonText}>
+          📅 {date.toDateString()}
+        </Text>
+      </Pressable>
 
-<DateTimePickerModal
-  isVisible={showTimePicker}
-  mode="time"
-  date={time}
-  isDarkModeEnabled={false}
-  themeVariant="light"
-  onConfirm={(selectedTime) => {
-    setTime(selectedTime);
-    setShowTimePicker(false);
-  }}
-  onCancel={() => setShowTimePicker(false)}
-/>
+      <Pressable
+        style={styles.dateButton}
+        onPress={() => setShowTimePicker(true)}
+      >
+        <Text style={styles.dateButtonText}>
+          🕒{" "}
+          {time.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
+      </Pressable>
 
-<DateTimePickerModal
-  isVisible={showPicker}
-  mode="date"
-  date={date}
-  isDarkModeEnabled={false}
-  themeVariant="light"
-  onConfirm={(selectedDate) => {
-    setDate(selectedDate);
-    setShowPicker(false);
-  }}
-  onCancel={() => setShowPicker(false)}
-/>
+      <DateTimePickerModal
+        isVisible={showPicker}
+        mode="date"
+        date={date}
+        isDarkModeEnabled={false}
+        themeVariant="light"
+        onConfirm={(selectedDate) => {
+          setDate(selectedDate);
+          setShowPicker(false);
+        }}
+        onCancel={() => setShowPicker(false)}
+      />
 
-      <Pressable style={styles.primaryButton} onPress={handleCreateEvent}>
-        <Text style={styles.primaryButtonText}>Create Event</Text>
+      <DateTimePickerModal
+        isVisible={showTimePicker}
+        mode="time"
+        date={time}
+        isDarkModeEnabled={false}
+        themeVariant="light"
+        onConfirm={(selectedTime) => {
+          setTime(selectedTime);
+          setShowTimePicker(false);
+        }}
+        onCancel={() => setShowTimePicker(false)}
+      />
+
+      <Pressable
+        style={styles.primaryButton}
+        onPress={handleCreateEvent}
+      >
+        <Text style={styles.primaryButtonText}>
+          Create Event
+        </Text>
       </Pressable>
 
       <Pressable
         style={styles.secondaryButton}
         onPress={() => navigation.navigate("Events")}
       >
-        <Text style={styles.secondaryButtonText}>View Events</Text>
+        <Text style={styles.secondaryButtonText}>
+          View Events
+        </Text>
       </Pressable>
     </View>
   );
@@ -154,6 +186,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
   },
+
   title: {
     fontSize: 30,
     fontWeight: "bold",
@@ -161,6 +194,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: spacing.lg,
   },
+
   input: {
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -170,6 +204,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     color: colors.text,
   },
+
   dateButton: {
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
@@ -178,20 +213,24 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: spacing.md,
   },
+
   dateButtonText: {
     color: colors.text,
   },
+
   primaryButton: {
     backgroundColor: colors.primary,
     padding: 15,
     borderRadius: radius.md,
     alignItems: "center",
   },
+
   primaryButtonText: {
     color: "#FFFFFF",
     fontWeight: "bold",
     fontSize: 16,
   },
+
   secondaryButton: {
     borderWidth: 1,
     borderColor: colors.primary,
@@ -200,11 +239,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.md,
   },
+
   secondaryButtonText: {
     color: colors.primary,
     fontWeight: "bold",
     fontSize: 16,
   },
+
   headerLogout: {
     color: colors.primary,
     fontWeight: "bold",
