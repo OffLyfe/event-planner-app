@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import { auth } from "./firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
+import EventList from "./EventList";
+import { signOut } from "firebase/auth";
 
 import {
   createUserWithEmailAndPassword,
@@ -51,6 +53,15 @@ const handleCreateEvent = async () => {
   }
 };
 
+const handleLogout = async () => {
+  try {
+    await signOut(auth);
+    alert("Logged out!");
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Event Planner App</Text>
@@ -73,6 +84,8 @@ const handleCreateEvent = async () => {
       <Button title="Register" onPress={handleRegister} />
       <View style={{ marginTop: 10 }} />
       <Button title="Login" onPress={handleLogin} />
+      <View style={{ marginTop: 10 }} />
+      <Button title="Logout" onPress={handleLogout} />
       <TextInput
   placeholder="Event title"
   style={styles.input}
@@ -88,6 +101,7 @@ const handleCreateEvent = async () => {
 />
 
 <Button title="Create Event" onPress={handleCreateEvent} />
+<EventList />
     </View>
   );
 }
