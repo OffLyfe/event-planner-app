@@ -1,13 +1,32 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+} from "react-native";
+
 import { auth, db } from "../firebaseConfig";
-import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
-import { colors, spacing, radius } from "../theme";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+
+import { colors, spacing, radius } from "../theme";
 
 export default function LoginScreen({ navigation }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -39,7 +58,7 @@ export default function LoginScreen({ navigation }) {
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        email,
+        email.trim(),
         password
       );
 
@@ -48,6 +67,7 @@ export default function LoginScreen({ navigation }) {
         username: cleanUsername,
         email: email.trim().toLowerCase(),
         friends: [],
+        avatarUrl: "",
         createdAt: new Date(),
       });
 
@@ -65,148 +85,201 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
 
       setEmail("");
       setPassword("");
 
-      navigation.replace("Events");
+      navigation.replace("Main");
     } catch (error) {
       alert(error.message);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.logo}>🎉</Text>
+    <KeyboardAvoidingView
+      style={styles.keyboard}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.decorTop} />
+        <View style={styles.decorBottom} />
 
-        <Text style={styles.title}>
-          {isRegister ? "Create account" : "Welcome back"}
-        </Text>
+        <View style={styles.card}>
+          <Image source={require("../assets/logo.png")} style={styles.logo} />
 
-        <Text style={styles.subtitle}>
-          {isRegister
-            ? "Create your profile and start planning events."
-            : "Login to continue to Event Planner."}
-        </Text>
+          <Text style={styles.tagline}>Meet people. Share moments.</Text>
 
-        {isRegister && (
-          <>
-            <TextInput
-              placeholder="Name"
-              placeholderTextColor={colors.muted}
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-            />
-
-            <TextInput
-              placeholder="Username"
-              placeholderTextColor={colors.muted}
-              style={styles.input}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-          </>
-        )}
-
-        <TextInput
-          placeholder="Email"
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-        />
-
-        <TextInput
-          placeholder="Password"
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        <Pressable
-          style={styles.primaryButton}
-          onPress={isRegister ? handleRegister : handleLogin}
-        >
-          <Text style={styles.primaryButtonText}>
-            {isRegister ? "Create account" : "Login"}
+          <Text style={styles.title}>
+            {isRegister ? "Create account" : "Welcome back"}
           </Text>
-        </Pressable>
 
-        <Pressable onPress={() => setIsRegister(!isRegister)}>
-          <Text style={styles.switchText}>
-            {isRegister
-              ? "Already have an account? Login"
-              : "Don't have an account? Create account"}
-          </Text>
-        </Pressable>
-      </View>
-    </View>
+          {isRegister && (
+            <>
+              <TextInput
+                placeholder="Name"
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+              />
+
+              <TextInput
+                placeholder="Username"
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+              />
+            </>
+          )}
+
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          <Pressable
+            style={styles.primaryButton}
+            onPress={isRegister ? handleRegister : handleLogin}
+          >
+            <Text style={styles.primaryButtonText}>
+              {isRegister ? "Create Account" : "Sign In"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => setIsRegister(!isRegister)}
+          >
+            <Text style={styles.secondaryButtonText}>
+              {isRegister ? "Already have an account? Sign In" : "Create Account"}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboard: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: spacing.lg,
   },
+
+  decorTop: {
+    position: "absolute",
+    top: -80,
+    right: -70,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: colors.primary,
+    opacity: 0.9,
+  },
+
+  decorBottom: {
+    position: "absolute",
+    bottom: -80,
+    left: -80,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: colors.secondary,
+    opacity: 0.9,
+  },
+
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
   },
+
   logo: {
-    fontSize: 44,
-    textAlign: "center",
+    width: 170,
+    height: 120,
+    resizeMode: "contain",
+    alignSelf: "center",
     marginBottom: spacing.sm,
   },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: colors.text,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 15,
+
+  tagline: {
     color: colors.muted,
+    textAlign: "center",
+    marginBottom: spacing.xl,
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: colors.text,
     textAlign: "center",
     marginBottom: spacing.lg,
   },
+
   input: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.input,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    padding: 14,
+    padding: 15,
     marginBottom: spacing.md,
     color: colors.text,
   },
+
   primaryButton: {
     backgroundColor: colors.primary,
-    padding: 15,
-    borderRadius: radius.md,
+    padding: 16,
+    borderRadius: radius.lg,
     alignItems: "center",
     marginTop: spacing.sm,
   },
+
   primaryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
+    color: colors.text,
+    fontWeight: "800",
     fontSize: 16,
   },
-  switchText: {
-    color: colors.primary,
-    textAlign: "center",
+
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    borderRadius: radius.lg,
+    alignItems: "center",
     marginTop: spacing.md,
-    fontWeight: "600",
+    backgroundColor: "#fff",
+  },
+
+  secondaryButtonText: {
+    color: colors.text,
+    fontWeight: "700",
   },
 });

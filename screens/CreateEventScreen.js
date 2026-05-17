@@ -1,7 +1,18 @@
-import React, { useLayoutEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  Image,
+} from "react-native";
+
+import * as ImagePicker from "expo-image-picker";
 import { collection, addDoc, getDoc, doc } from "firebase/firestore";
-import { signOut } from "firebase/auth";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 import { auth, db } from "../firebaseConfig";
@@ -11,30 +22,43 @@ export default function CreateEventScreen({ navigation }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [time, setTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigation.replace("Login");
-    } catch (error) {
-      alert(error.message);
+  const pickEventImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImageUrl(result.assets[0].uri);
     }
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerBackVisible: false,
-      headerRight: () => (
-        <Pressable onPress={handleLogout}>
-          <Text style={styles.headerLogout}>Logout</Text>
-        </Pressable>
-      ),
+  const takeEventImage = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      alert("Camera permission is required.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
     });
-  }, [navigation]);
+
+    if (!result.canceled) {
+      setImageUrl(result.assets[0].uri);
+    }
+  };
 
   const handleCreateEvent = async () => {
     if (!title.trim() || !location.trim()) {
@@ -52,9 +76,10 @@ export default function CreateEventScreen({ navigation }) {
       const userData = userDoc.data();
 
       await addDoc(collection(db, "events"), {
-        title,
-        description,
-        location,
+        title: title.trim(),
+        description: description.trim(),
+        location: location.trim(),
+        imageUrl: imageUrl.trim(),
         date: date.toDateString(),
         time: time.toLocaleTimeString([], {
           hour: "2-digit",
@@ -63,6 +88,7 @@ export default function CreateEventScreen({ navigation }) {
         participants: [],
         createdBy: auth.currentUser.uid,
         creatorName: userData?.username || userData?.name || "unknown",
+        creatorAvatar: userData?.avatarUrl || "",
         createdAt: new Date(),
       });
 
@@ -71,6 +97,7 @@ export default function CreateEventScreen({ navigation }) {
       setTitle("");
       setDescription("");
       setLocation("");
+      setImageUrl("");
       setDate(new Date());
       setTime(new Date());
 
@@ -81,151 +108,246 @@ export default function CreateEventScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Event</Text>
-
-      <TextInput
-        placeholder="Event title"
-        placeholderTextColor={colors.muted}
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-      />
-
-      <TextInput
-        placeholder="Event description"
-        placeholderTextColor={colors.muted}
-        style={styles.input}
-        value={description}
-        onChangeText={setDescription}
-      />
-
-      <TextInput
-        placeholder="Location"
-        placeholderTextColor={colors.muted}
-        style={styles.input}
-        value={location}
-        onChangeText={setLocation}
-      />
-
-      <Pressable style={styles.dateButton} onPress={() => setShowPicker(true)}>
-        <Text style={styles.dateButtonText}>📅 {date.toDateString()}</Text>
-      </Pressable>
-
-      <Pressable
-        style={styles.dateButton}
-        onPress={() => setShowTimePicker(true)}
+    <KeyboardAvoidingView
+      style={styles.keyboard}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.dateButtonText}>
-          🕒{" "}
-          {time.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
-      </Pressable>
+        <Text style={styles.title}>Create Event</Text>
 
-      <DateTimePickerModal
-        isVisible={showPicker}
-        mode="date"
-        date={date}
-        isDarkModeEnabled={false}
-        themeVariant="light"
-        onConfirm={(selectedDate) => {
-          setDate(selectedDate);
-          setShowPicker(false);
-        }}
-        onCancel={() => setShowPicker(false)}
-      />
+        <View style={styles.imageBox}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.previewImage} />
+          ) : (
+            <>
+              <Text style={styles.imageIcon}>🖼️</Text>
+              <Text style={styles.imageText}>Add Event Image</Text>
+            </>
+          )}
+        </View>
 
-      <DateTimePickerModal
-        isVisible={showTimePicker}
-        mode="time"
-        date={time}
-        isDarkModeEnabled={false}
-        themeVariant="light"
-        onConfirm={(selectedTime) => {
-          setTime(selectedTime);
-          setShowTimePicker(false);
-        }}
-        onCancel={() => setShowTimePicker(false)}
-      />
+        <View style={styles.imageActions}>
+          <Pressable style={styles.imageButton} onPress={pickEventImage}>
+            <Text style={styles.imageButtonText}>Gallery</Text>
+          </Pressable>
 
-      <Pressable style={styles.primaryButton} onPress={handleCreateEvent}>
-        <Text style={styles.primaryButtonText}>Create Event</Text>
-      </Pressable>
+          <Pressable style={styles.imageButtonSecondary} onPress={takeEventImage}>
+            <Text style={styles.imageButtonSecondaryText}>Camera</Text>
+          </Pressable>
+        </View>
 
-      <Pressable
-        style={styles.secondaryButton}
-        onPress={() => navigation.navigate("Events")}
-      >
-        <Text style={styles.secondaryButtonText}>View Events</Text>
-      </Pressable>
-    </View>
+        <TextInput
+          placeholder="Event Title"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          returnKeyType="next"
+        />
+
+        <TextInput
+          placeholder="Description"
+          placeholderTextColor={colors.muted}
+          style={[styles.input, styles.textArea]}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          textAlignVertical="top"
+        />
+
+        <TextInput
+          placeholder="Location"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={location}
+          onChangeText={setLocation}
+          returnKeyType="done"
+        />
+
+        <View style={styles.row}>
+          <Pressable
+            style={styles.dateButton}
+            onPress={() => setShowPicker(true)}
+          >
+            <Text style={styles.dateButtonText}>📅 {date.toDateString()}</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.dateButton}
+            onPress={() => setShowTimePicker(true)}
+          >
+            <Text style={styles.dateButtonText}>
+              🕒{" "}
+              {time.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </Pressable>
+        </View>
+
+        <DateTimePickerModal
+          isVisible={showPicker}
+          mode="date"
+          date={date}
+          isDarkModeEnabled={false}
+          themeVariant="light"
+          onConfirm={(selectedDate) => {
+            setDate(selectedDate);
+            setShowPicker(false);
+          }}
+          onCancel={() => setShowPicker(false)}
+        />
+
+        <DateTimePickerModal
+          isVisible={showTimePicker}
+          mode="time"
+          date={time}
+          isDarkModeEnabled={false}
+          themeVariant="light"
+          onConfirm={(selectedTime) => {
+            setTime(selectedTime);
+            setShowTimePicker(false);
+          }}
+          onCancel={() => setShowTimePicker(false)}
+        />
+
+        <Pressable style={styles.primaryButton} onPress={handleCreateEvent}>
+          <Text style={styles.primaryButtonText}>Create Event</Text>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboard: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: "center",
-    padding: spacing.lg,
   },
+
+  container: {
+    flexGrow: 1,
+    padding: spacing.lg,
+    paddingBottom: 120,
+  },
+
   title: {
-    fontSize: 30,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "900",
     color: colors.text,
     textAlign: "center",
     marginBottom: spacing.lg,
   },
-  input: {
-    backgroundColor: "#F9FAFB",
+
+  imageBox: {
+    height: 170,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 14,
+    borderStyle: "dashed",
+    borderColor: colors.primary,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.md,
-    color: colors.text,
+    backgroundColor: "#FFF9E8",
+    overflow: "hidden",
   },
-  dateButton: {
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 14,
+
+  previewImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  imageIcon: {
+    fontSize: 30,
+    marginBottom: spacing.sm,
+  },
+
+  imageText: {
+    color: colors.primaryDark,
+    fontWeight: "900",
+  },
+
+  imageActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  dateButtonText: {
-    color: colors.text,
-  },
-  primaryButton: {
+
+  imageButton: {
+    flex: 1,
     backgroundColor: colors.primary,
-    padding: 15,
+    padding: 13,
     borderRadius: radius.md,
     alignItems: "center",
   },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
+
+  imageButtonText: {
+    color: colors.text,
+    fontWeight: "900",
   },
-  secondaryButton: {
+
+  imageButtonSecondary: {
+    flex: 1,
+    backgroundColor: colors.secondary,
+    padding: 13,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+
+  imageButtonSecondaryText: {
+    color: "#fff",
+    fontWeight: "900",
+  },
+
+  input: {
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     padding: 15,
+    marginBottom: spacing.md,
+    color: colors.text,
+  },
+
+  textArea: {
+    minHeight: 90,
+  },
+
+  row: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+
+  dateButton: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: 14,
+  },
+
+  dateButtonText: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+
+  primaryButton: {
+    backgroundColor: colors.primary,
+    padding: 16,
     borderRadius: radius.md,
     alignItems: "center",
     marginTop: spacing.md,
   },
-  secondaryButtonText: {
-    color: colors.primary,
-    fontWeight: "bold",
+
+  primaryButtonText: {
+    color: colors.text,
+    fontWeight: "900",
     fontSize: 16,
-  },
-  headerLogout: {
-    color: colors.primary,
-    fontWeight: "bold",
-    marginRight: 10,
   },
 });

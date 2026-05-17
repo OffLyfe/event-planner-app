@@ -1,12 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   View,
   Text,
   TextInput,
   Pressable,
   StyleSheet,
   ScrollView,
+  Image,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import {
   addDoc,
@@ -24,6 +28,9 @@ import {
 import { auth, db } from "../firebaseConfig";
 import { colors, spacing, radius } from "../theme";
 
+const fallbackImage =
+  "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800";
+
 export default function EventDetailScreen({ route }) {
   const eventId = route?.params?.eventId;
 
@@ -37,9 +44,7 @@ export default function EventDetailScreen({ route }) {
   useEffect(() => {
     if (!eventId) return;
 
-    const eventRef = doc(db, "events", eventId);
-
-    const unsubscribe = onSnapshot(eventRef, (eventDoc) => {
+    const unsubscribe = onSnapshot(doc(db, "events", eventId), (eventDoc) => {
       if (eventDoc.exists()) {
         setEvent({
           id: eventDoc.id,
@@ -54,7 +59,6 @@ export default function EventDetailScreen({ route }) {
   useEffect(() => {
     const loadCurrentUserProfile = async () => {
       const user = auth.currentUser;
-
       if (!user) return;
 
       const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -97,11 +101,7 @@ export default function EventDetailScreen({ route }) {
 
   const handleJoinEvent = async () => {
     const user = auth.currentUser;
-
-    if (!user) {
-      alert("Please log in first.");
-      return;
-    }
+    if (!user) return;
 
     await updateDoc(doc(db, "events", eventId), {
       participants: arrayUnion(user.uid),
@@ -110,11 +110,7 @@ export default function EventDetailScreen({ route }) {
 
   const handleLeaveEvent = async () => {
     const user = auth.currentUser;
-
-    if (!user) {
-      alert("Please log in first.");
-      return;
-    }
+    if (!user) return;
 
     await updateDoc(doc(db, "events", eventId), {
       participants: arrayRemove(user.uid),
@@ -125,17 +121,14 @@ export default function EventDetailScreen({ route }) {
     if (!message.trim()) return;
 
     const user = auth.currentUser;
-
-    if (!user) {
-      alert("Please log in first.");
-      return;
-    }
+    if (!user) return;
 
     await addDoc(collection(db, "events", eventId, "messages"), {
       text: message.trim(),
       senderUid: user.uid,
       senderUsername:
         currentUserProfile?.username || currentUserProfile?.name || "User",
+      senderAvatar: currentUserProfile?.avatarUrl || "",
       createdAt: new Date(),
     });
 
@@ -144,7 +137,7 @@ export default function EventDetailScreen({ route }) {
 
   if (!eventId) {
     return (
-      <View style={styles.container}>
+      <View style={styles.center}>
         <Text>Event was not found.</Text>
       </View>
     );
@@ -152,257 +145,344 @@ export default function EventDetailScreen({ route }) {
 
   if (!event) {
     return (
-      <View style={styles.container}>
+      <View style={styles.center}>
         <Text>Loading event...</Text>
       </View>
     );
   }
 
   const isParticipant = event.participants?.includes(auth.currentUser?.uid);
+  const eventImage = event.imageUrl || fallbackImage;
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{event.title}</Text>
+    <KeyboardAvoidingView
+      style={styles.keyboard}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={90}
+    >
+      <ScrollView
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Image source={{ uri: eventImage }} style={styles.heroImage} />
 
-        <Text style={styles.creatorText}>
-          Created by @{event.creatorName || "unknown"}
-        </Text>
+        <View style={styles.card}>
+          <Text style={styles.title}>{event.title}</Text>
 
-        <Text style={styles.description}>{event.description}</Text>
-
-        <Text style={styles.infoText}>📍 {event.location}</Text>
-
-        <Text style={styles.infoText}>
-          📅 {event.date} • 🕒 {event.time}
-        </Text>
-
-        <Text style={styles.infoText}>
-          👥 {event.participants?.length || 0} going
-        </Text>
-
-        <Pressable
-          style={[
-            styles.joinButton,
-            isParticipant ? styles.leaveButton : styles.goingButton,
-          ]}
-          onPress={isParticipant ? handleLeaveEvent : handleJoinEvent}
-        >
-          <Text style={styles.joinButtonText}>
-            {isParticipant ? "Leave Event" : "I'm Going"}
+          <Text style={styles.creatorText}>
+            Created by @{event.creatorName || "unknown"}
           </Text>
-        </Pressable>
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Event Chat</Text>
+          <Text style={styles.description}>{event.description}</Text>
 
-        {!isParticipant ? (
-          <Text style={styles.mutedText}>Join this event to access chat.</Text>
-        ) : (
-          <>
-            {messages.length === 0 ? (
-              <Text style={styles.mutedText}>No messages yet.</Text>
-            ) : (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>📍 {event.location}</Text>
+            <Text style={styles.infoText}>
+              📅 {event.date} • 🕒 {event.time}
+            </Text>
+            <Text style={styles.infoText}>
+              👥 {event.participants?.length || 0} going
+            </Text>
+          </View>
+
+          <Pressable
+            style={[
+              styles.joinButton,
+              isParticipant ? styles.leaveButton : styles.goingButton,
+            ]}
+            onPress={isParticipant ? handleLeaveEvent : handleJoinEvent}
+          >
+            <Text style={styles.joinButtonText}>
+              {isParticipant ? "Leave Event" : "I'm Going"}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Event Chat</Text>
+
+          {!isParticipant ? (
+            <Text style={styles.mutedText}>
+              Join this event to access chat.
+            </Text>
+          ) : (
+            <>
               <ScrollView
                 ref={chatScrollRef}
                 style={styles.chatList}
                 nestedScrollEnabled
               >
-                {messages.map((item) => {
-                  const isMine = item.senderUid === auth.currentUser?.uid;
+                {messages.length === 0 ? (
+                  <Text style={styles.mutedText}>No messages yet.</Text>
+                ) : (
+                  messages.map((item) => {
+                    const isMine = item.senderUid === auth.currentUser?.uid;
 
-                  return (
-                    <View
-                      key={item.id}
-                      style={[
-                        styles.messageWrapper,
-                        isMine
-                          ? styles.myMessageWrapper
-                          : styles.otherMessageWrapper,
-                      ]}
-                    >
+                    return (
                       <View
+                        key={item.id}
                         style={[
-                          styles.messageBubble,
-                          isMine
-                            ? styles.myMessageBubble
-                            : styles.otherMessageBubble,
+                          styles.messageRow,
+                          isMine ? styles.myMessageRow : styles.otherMessageRow,
                         ]}
                       >
-                        <Text
-                          style={[
-                            styles.messageSender,
-                            isMine
-                              ? styles.myMessageSender
-                              : styles.otherMessageSender,
-                          ]}
-                        >
-                          @{item.senderUsername || "user"}
-                        </Text>
+                        {!isMine && (
+                          <Image
+                            source={
+                              item.senderAvatar
+                                ? { uri: item.senderAvatar }
+                                : require("../assets/default-avatar.png")
+                            }
+                            style={styles.chatAvatar}
+                          />
+                        )}
 
-                        <Text
+                        <View
                           style={[
-                            styles.messageText,
+                            styles.messageBubble,
                             isMine
-                              ? styles.myMessageText
-                              : styles.otherMessageText,
+                              ? styles.myMessageBubble
+                              : styles.otherMessageBubble,
                           ]}
                         >
-                          {item.text}
-                        </Text>
+                          <Text
+                            style={[
+                              styles.messageSender,
+                              isMine
+                                ? styles.myMessageSender
+                                : styles.otherMessageSender,
+                            ]}
+                          >
+                            @{item.senderUsername || "user"}
+                          </Text>
+
+                          <Text
+                            style={[
+                              styles.messageText,
+                              isMine
+                                ? styles.myMessageText
+                                : styles.otherMessageText,
+                            ]}
+                          >
+                            {item.text}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  );
-                })}
+                    );
+                  })
+                )}
               </ScrollView>
-            )}
 
-            <View style={styles.inputRow}>
-              <TextInput
-                placeholder="Write a message..."
-                placeholderTextColor={colors.muted}
-                style={styles.input}
-                value={message}
-                onChangeText={setMessage}
-              />
+              <View style={styles.inputRow}>
+                <TextInput
+                  placeholder="Write a message..."
+                  placeholderTextColor={colors.muted}
+                  style={styles.input}
+                  value={message}
+                  onChangeText={setMessage}
+                  returnKeyType="send"
+                  onSubmitEditing={handleSendMessage}
+                />
 
-              <Pressable style={styles.sendButton} onPress={handleSendMessage}>
-                <Text style={styles.sendButtonText}>Send</Text>
-              </Pressable>
-            </View>
-          </>
-        )}
-      </View>
-    </ScrollView>
+                <Pressable style={styles.sendButton} onPress={handleSendMessage}>
+                  <Ionicons name="send" size={20} color={colors.text} />
+                </Pressable>
+              </View>
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboard: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+
   container: {
     flex: 1,
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
+
+  center: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  heroImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: radius.xl,
+    marginBottom: spacing.md,
+    backgroundColor: colors.border,
+  },
+
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.md,
   },
+
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "900",
     color: colors.text,
-    marginBottom: spacing.sm,
   },
+
   creatorText: {
     color: colors.muted,
-    marginBottom: spacing.sm,
+    marginTop: 4,
+    marginBottom: spacing.md,
   },
+
   description: {
     fontSize: 15,
     color: colors.text,
     marginBottom: spacing.md,
   },
-  infoText: {
-    color: colors.muted,
-    marginTop: 4,
+
+  infoBox: {
+    backgroundColor: "#FFF9E8",
+    borderRadius: radius.md,
+    padding: spacing.md,
   },
+
+  infoText: {
+    color: colors.text,
+    marginBottom: 4,
+    fontWeight: "700",
+  },
+
   joinButton: {
-    padding: 14,
+    padding: 15,
     borderRadius: radius.md,
     alignItems: "center",
     marginTop: spacing.lg,
   },
+
   goingButton: {
     backgroundColor: colors.primary,
   },
+
   leaveButton: {
-    backgroundColor: colors.danger,
+    backgroundColor: colors.secondary,
   },
+
   joinButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: colors.text,
+    fontWeight: "900",
   },
+
   sectionTitle: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontWeight: "900",
     color: colors.text,
     marginBottom: spacing.md,
   },
+
   mutedText: {
     color: colors.muted,
   },
+
   chatList: {
-    height: 300,
+    height: 320,
     marginBottom: spacing.md,
   },
-  messageWrapper: {
+
+  messageRow: {
+    flexDirection: "row",
     marginBottom: spacing.sm,
-  },
-  myMessageWrapper: {
     alignItems: "flex-end",
   },
-  otherMessageWrapper: {
-    alignItems: "flex-start",
+
+  myMessageRow: {
+    justifyContent: "flex-end",
   },
+
+  otherMessageRow: {
+    justifyContent: "flex-start",
+  },
+
+  chatAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: spacing.sm,
+  },
+
   messageBubble: {
-    maxWidth: "85%",
-    borderRadius: radius.md,
+    maxWidth: "82%",
+    borderRadius: radius.lg,
     padding: 12,
   },
+
   myMessageBubble: {
     backgroundColor: colors.primary,
+    borderBottomRightRadius: 4,
   },
+
   otherMessageBubble: {
     backgroundColor: "#F3F4F6",
+    borderBottomLeftRadius: 4,
   },
+
   messageSender: {
     fontSize: 12,
+    fontWeight: "900",
     marginBottom: 4,
-    fontWeight: "bold",
   },
+
   myMessageSender: {
-    color: "#E0E7FF",
+    color: colors.text,
   },
+
   otherMessageSender: {
     color: colors.muted,
   },
+
   messageText: {
     fontSize: 15,
   },
+
   myMessageText: {
-    color: "#FFFFFF",
+    color: colors.text,
   },
+
   otherMessageText: {
     color: colors.text,
   },
+
   inputRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: spacing.md,
+    gap: spacing.sm,
+    alignItems: "center",
   },
+
   input: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.input,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: 14,
     color: colors.text,
   },
+
   sendButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    borderRadius: radius.md,
     justifyContent: "center",
     alignItems: "center",
-  },
-  sendButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
   },
 });

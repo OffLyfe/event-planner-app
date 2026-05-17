@@ -1,5 +1,13 @@
-import { useEffect, useState, useLayoutEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { useEffect, useState } from "react";
+
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Image,
+} from "react-native";
 
 import {
   collection,
@@ -11,32 +19,14 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 
-import { signOut } from "firebase/auth";
 import { db, auth } from "./firebaseConfig";
-import { colors, radius } from "./theme";
+import { colors, spacing, radius } from "./theme";
+
+const fallbackImage =
+  "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800";
 
 export default function EventList({ navigation }) {
   const [events, setEvents] = useState([]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigation.replace("Login");
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerBackVisible: false,
-      headerRight: () => (
-        <Pressable onPress={handleLogout}>
-          <Text style={styles.headerLogout}>Logout</Text>
-        </Pressable>
-      ),
-    });
-  }, [navigation]);
 
   const handleDeleteEvent = async (id) => {
     try {
@@ -95,84 +85,124 @@ export default function EventList({ navigation }) {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.topRow}>
-        <Text style={styles.title}>Events</Text>
-
-        <View style={styles.topButtons}>
-          <Pressable
-            style={styles.friendsButton}
-            onPress={() => navigation.navigate("Friends")}
-          >
-            <Text style={styles.friendsButtonText}>Friends</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.createButton}
-            onPress={() => navigation.navigate("Create Event")}
-          >
-            <Text style={styles.createButtonText}>+ Create</Text>
-          </Pressable>
-        </View>
-      </View>
-
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {events.length === 0 ? (
-        <Text style={styles.emptyText}>No events yet.</Text>
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyEmoji}>🎉</Text>
+
+          <Text style={styles.emptyTitle}>
+            No events yet
+          </Text>
+
+          <Text style={styles.emptyText}>
+            Create your first event and invite friends.
+          </Text>
+        </View>
       ) : (
         events.map((event) => {
-          const isGoing = event.participants?.includes(auth.currentUser?.uid);
+          const isParticipant =
+            event.participants?.includes(auth.currentUser?.uid);
+
+          const eventImage = event.imageUrl || fallbackImage;
 
           return (
             <Pressable
               key={event.id}
               style={styles.card}
               onPress={() =>
-                navigation.navigate("Event Detail", { eventId: event.id })
+                navigation.navigate("Event Detail", {
+                  eventId: event.id,
+                })
               }
             >
-              <Text style={styles.eventTitle}>{event.title}</Text>
+              <Image
+                source={{ uri: eventImage }}
+                style={styles.cardImage}
+              />
 
-              <Text style={styles.creatorText}>
-                Created by @{event.creatorName || "unknown"}
-              </Text>
+              <View style={styles.cardContent}>
+                <View style={styles.creatorRow}>
+                  <Image
+                    source={
+                      event.creatorAvatar
+                        ? { uri: event.creatorAvatar }
+                        : require("./assets/default-avatar.png")
+                    }
+                    style={styles.creatorAvatar}
+                  />
 
-              <Text style={styles.description}>{event.description}</Text>
+                  <View>
+                    <Text style={styles.creatorName}>
+                      @{event.creatorName || "unknown"}
+                    </Text>
 
-              <Text style={styles.infoText}>📍 {event.location}</Text>
+                    <Text style={styles.creatorSubtext}>
+                      created this event
+                    </Text>
+                  </View>
+                </View>
 
-              <Text style={styles.infoText}>
-                📅 {event.date} • 🕒 {event.time}
-              </Text>
+                <Text style={styles.eventTitle}>
+                  {event.title}
+                </Text>
 
-              <Text style={styles.infoText}>
-                👥 {event.participants?.length || 0} going
-              </Text>
+                <Text
+                  style={styles.description}
+                  numberOfLines={2}
+                >
+                  {event.description}
+                </Text>
 
-              <View style={styles.buttonRow}>
-                {isGoing ? (
+                <View style={styles.infoBox}>
+                  <Text style={styles.infoText}>
+                    📍 {event.location}
+                  </Text>
+
+                  <Text style={styles.infoText}>
+                    📅 {event.date} • 🕒 {event.time}
+                  </Text>
+
+                  <Text style={styles.infoText}>
+                    👥 {event.participants?.length || 0} going
+                  </Text>
+                </View>
+
+                <View style={styles.actions}>
+                  {event.createdBy === auth.currentUser?.uid && (
+                    <Pressable
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteEvent(event.id)}
+                    >
+                      <Text style={styles.deleteButtonText}>
+                        Delete
+                      </Text>
+                    </Pressable>
+                  )}
+
                   <Pressable
-                    style={[styles.actionButton, styles.leaveButton]}
-                    onPress={() => handleLeaveEvent(event.id)}
+                    style={[
+                      styles.joinButton,
+                      isParticipant
+                        ? styles.leaveButton
+                        : styles.goingButton,
+                    ]}
+                    onPress={() =>
+                      isParticipant
+                        ? handleLeaveEvent(event.id)
+                        : handleJoinEvent(event.id)
+                    }
                   >
-                    <Text style={styles.actionButtonText}>Leave</Text>
+                    <Text style={styles.joinButtonText}>
+                      {isParticipant
+                        ? "Leave"
+                        : "I'm Going"}
+                    </Text>
                   </Pressable>
-                ) : (
-                  <Pressable
-                    style={[styles.actionButton, styles.joinButton]}
-                    onPress={() => handleJoinEvent(event.id)}
-                  >
-                    <Text style={styles.actionButtonText}>I'm Going</Text>
-                  </Pressable>
-                )}
-
-                {event.createdBy === auth.currentUser?.uid && (
-                  <Pressable
-                    style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => handleDeleteEvent(event.id)}
-                  >
-                    <Text style={styles.actionButtonText}>Delete</Text>
-                  </Pressable>
-                )}
+                </View>
               </View>
             </Pressable>
           );
@@ -186,103 +216,140 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: 20,
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+
+  content: {
+    padding: spacing.lg,
+    paddingBottom: 120,
+  },
+
+  emptyBox: {
     alignItems: "center",
-    marginBottom: 20,
+    marginTop: 120,
   },
-  topButtons: {
-    flexDirection: "row",
-    gap: 10,
+
+  emptyEmoji: {
+    fontSize: 60,
+    marginBottom: spacing.md,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
+
+  emptyTitle: {
+    fontSize: 26,
+    fontWeight: "900",
     color: colors.text,
+    marginBottom: spacing.sm,
   },
-  createButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: radius.md,
-  },
-  createButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  friendsButton: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: radius.md,
-  },
-  friendsButtonText: {
-    color: colors.primary,
-    fontWeight: "bold",
-  },
-  headerLogout: {
-    color: colors.primary,
-    fontWeight: "bold",
-    marginRight: 10,
-  },
+
   emptyText: {
-    fontSize: 16,
     color: colors.muted,
+    textAlign: "center",
+    paddingHorizontal: spacing.lg,
   },
+
   card: {
-    padding: 15,
+    backgroundColor: colors.card,
+    borderRadius: radius.xl,
+    overflow: "hidden",
+    marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    marginBottom: 12,
-    backgroundColor: colors.card,
   },
-  eventTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
-    color: colors.text,
+
+  cardImage: {
+    width: "100%",
+    height: 210,
+    backgroundColor: colors.border,
   },
-  creatorText: {
-    color: colors.muted,
-    marginBottom: 8,
-    fontSize: 13,
+
+  cardContent: {
+    padding: spacing.lg,
   },
-  description: {
-    fontSize: 15,
-    marginBottom: 8,
-    color: colors.text,
-  },
-  infoText: {
-    color: colors.muted,
-    marginTop: 4,
-  },
-  buttonRow: {
+
+  creatorRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 14,
+    alignItems: "center",
+    marginBottom: spacing.md,
   },
-  actionButton: {
+
+  creatorAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginRight: spacing.sm,
+    backgroundColor: colors.border,
+  },
+
+  creatorName: {
+    fontWeight: "900",
+    color: colors.text,
+  },
+
+  creatorSubtext: {
+    color: colors.muted,
+    fontSize: 12,
+  },
+
+  eventTitle: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+
+  description: {
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: spacing.md,
+  },
+
+  infoBox: {
+    backgroundColor: "#FFF9E8",
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+
+  infoText: {
+    color: colors.text,
+    marginBottom: 4,
+    fontWeight: "700",
+  },
+
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+
+  deleteButton: {
     flex: 1,
-    padding: 12,
+    backgroundColor: colors.secondary,
+    padding: 14,
     borderRadius: radius.md,
     alignItems: "center",
   },
+
+  deleteButtonText: {
+    color: "#fff",
+    fontWeight: "900",
+  },
+
   joinButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+
+  goingButton: {
     backgroundColor: colors.primary,
   },
+
   leaveButton: {
-    backgroundColor: colors.danger,
+    backgroundColor: "#FACC15",
   },
-  deleteButton: {
-    backgroundColor: "#111827",
-  },
-  actionButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+
+  joinButtonText: {
+    color: colors.text,
+    fontWeight: "900",
   },
 });
