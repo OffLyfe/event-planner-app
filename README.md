@@ -14,15 +14,16 @@ MEETR je mobilná aplikácia vytvorená pomocou React Native a Expo frameworku, 
 -	pripájať sa na eventy ostatných používateľov,
 -	komunikovať cez realtime chat,
 -	pridávať si priateľov,
-
 -	zobrazovať eventy priateľov,
 -	budovať jednoduchú sociálnu sieť.
+  
 Projekt bol vytvorený so zameraním na:
 -	mobilný frontend,
 -	realtime databázu,
 -	moderný UI/UX dizajn,
 -	cloud backend,
 -	autentifikáciu používateľov.
+  
 ________________________________________
 
 2. Hlavné funkcionality
