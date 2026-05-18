@@ -345,7 +345,7 @@ ________________________________________
 
 8. Autori projektu
 
-Semester projekt vytvorený v rámci predmetu mobilné systémy a sociálne siete.
+Projekt vytvorený v rámci predmetu mobilné systémy a sociálne siete.
 
 Autori:
 
