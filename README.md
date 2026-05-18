@@ -5,124 +5,110 @@ ________________________________________
 1.	Stručný popis projektu
 
 MEETR je mobilná aplikácia vytvorená pomocou React Native a Expo frameworku, ktorá umožňuje používateľom:
-•	vytvárať udalosti,
-•	pripájať sa na eventy ostatných používateľov,
-•	komunikovať cez realtime chat,
-•	pridávať si priateľov,
-•	zobrazovať eventy priateľov,
-•	budovať jednoduchú sociálnu sieť.
+-	vytvárať udalosti,
+-	pripájať sa na eventy ostatných používateľov,
+-	komunikovať cez realtime chat,
+-	pridávať si priateľov,
+-	zobrazovať eventy priateľov,
+-	budovať jednoduchú sociálnu sieť.
 Projekt bol vytvorený so zameraním na:
-•	mobilný frontend,
-•	realtime databázu,
-•	moderný UI/UX dizajn,
-•	cloud backend,
-•	autentifikáciu používateľov.
+-	mobilný frontend,
+-	realtime databázu,
+-	moderný UI/UX dizajn,
+-	cloud backend,
+-	autentifikáciu používateľov.
 ________________________________________
 
 2. Hlavné funkcionality
 
 Používateľský systém
-•	registrácia používateľov,
-•	login/logout,
-•	používateľské profily,
-•	profilové fotografie,
-•	bio používateľa.
+-	registrácia používateľov,
+-	login/logout,
+-	používateľské profily,
+-	profilové fotografie,
+-	bio používateľa.
 ________________________________________
 
 Event systém
 
-•	vytváranie eventov,
-•	názov, popis, dátum a čas eventu,
-•	event fotografia,
-•	zobrazenie autora eventu,
-•	počet účastníkov,
-•	join / leave event.
+-	vytváranie eventov,
+-	názov, popis, dátum a čas eventu,
+-	event fotografia,
+-	zobrazenie autora eventu,
+-	počet účastníkov,
+-	join / leave event.
 ________________________________________
 
 Sociálne funkcionality
 
-•	friend requests,
-•	accept / decline requests,
-•	friends list,
-•	zobrazenie eventov priateľov,
-•	otvorenie eventu cez profil priateľa.
+-	friend requests,
+-	accept / decline requests,
+-	friends list,
+-	zobrazenie eventov priateľov,
+-	otvorenie eventu cez profil priateľa.
 ________________________________________
 
 Event Chat
 
-•	realtime chat ku každému eventu,
-•	chat len pre účastníkov eventu,
-•	profilové fotografie v chate,
-•	messenger-style dizajn,
-•	automatický scroll správ,
-•	odosielanie správ cez klávesnicu.
+-	realtime chat ku každému eventu,
+-	chat len pre účastníkov eventu,
+-	profilové fotografie v chate,
+-	messenger-style dizajn,
+-	automatický scroll správ,
+-	odosielanie správ cez klávesnicu.
 ________________________________________
 
 UI/UX
 
-•	moderný redesign aplikácie,
-•	custom branding pomocou MEETR loga,
-•	moderné event cards,
-•	responzívny layout,
-•	modern chat bubbles,
-•	custom bottom navigation,
-•	keyboard fixes.
+-	moderný redesign aplikácie,
+-	custom branding pomocou MEETR loga,
+-	moderné event cards,
+-	responzívny layout,
+-	modern chat bubbles,
+-	custom bottom navigation,
+-	keyboard fixes.
 ________________________________________
 
 3. Použité technológie
 
 Frontend
-•	React Native
-•	Expo
-•	JavaScript
-•	React Navigation
-•	Expo Image Picker
+-	React Native
+-	Expo
+-	JavaScript
+-	React Navigation
+-	Expo Image Picker
 ________________________________________
 
 Backend a databáza
 
-•	Firebase Authentication
-•	Firebase Firestore
+-	Firebase Authentication
+-	Firebase Firestore
 ________________________________________
 
 UI knižnice
 
-•	React Native Gesture Handler
-•	React Native Reanimated
-•	Expo Vector Icons
+-	React Native Gesture Handler
+-	React Native Reanimated
+-	Expo Vector Icons
 ________________________________________
 
 Vývojové nástroje
 
-•	Visual Studio Code
-•	Git
-•	GitHub
-•	Expo Go
+-	Visual Studio Code
+-	Git
+-	GitHub
+-	Expo Go
 ________________________________________
 
-4. Štruktúra projektu
-
-project-root
-│
-├── assets
-├── navigation
-├── screens
-├── App.js
-├── firebaseConfig.js
-├── EventList.js
-├── theme.js
-└── package.json
-________________________________________
-
-5. Návod na spustenie projektu
+4. Návod na spustenie projektu
 
 Požiadavky
 Pred spustením projektu je potrebné mať nainštalované:
-•	Node.js
-•	npm
-•	Expo CLI
-•	Expo Go aplikáciu v mobile
-•	Firebase projekt
+-	Node.js
+-	npm
+-	Expo CLI
+-	Expo Go aplikáciu v mobile
+-	Firebase projekt
 ________________________________________
 
 Inštalácia projektu
@@ -178,15 +164,15 @@ Vyčistenie cache:
 npx expo start -c
 
 Následne:
-•	naskenovať QR kód pomocou Expo Go,
-•	alebo spustiť Android/iOS emulátor.
+-	naskenovať QR kód pomocou Expo Go,
+-	alebo spustiť Android/iOS emulátor.
 ________________________________________
 
-6. Firebase konfigurácia
+5. Firebase konfigurácia
 
 Projekt používa:
-•	Firebase Authentication,
-•	Firebase Firestore Database.
+-	Firebase Authentication,
+-	Firebase Firestore Database.
 
 Je potrebné:
 1.	vytvoriť Firebase projekt,
@@ -207,7 +193,7 @@ const firebaseConfig = {
 };
 ________________________________________
 
-8. Reflexia využitia LLM nástrojov
+6. Reflexia využitia LLM nástrojov
 
 Pri vývoji projektu boli využitý ChatGPT v platenej verzii.
 ________________________________________
@@ -216,39 +202,39 @@ Oblasti využitia LLM
 
 Vývoj frontend funkcionalít
 LLM nástroje boli použité pri:
-•	návrhu architektúry aplikácie,
-•	implementácii React Native komponentov,
-•	návrhu navigácie,
-•	implementácii realtime chatu,
-•	implementácii Firebase logiky,
-•	refaktoringu UI komponentov.
+-	návrhu architektúry aplikácie,
+-	implementácii React Native komponentov,
+-	návrhu navigácie,
+-	implementácii realtime chatu,
+-	implementácii Firebase logiky,
+-	refaktoringu UI komponentov.
 ________________________________________
 
 UI/UX návrh
 
 Pomocou LLM boli navrhnuté:
-•	moderné event cards,
-•	messenger-style chat,
-•	layout profilov,
-•	bottom tab navigation,
-•	farebná schéma aplikácie.
+-	moderné event cards,
+-	messenger-style chat,
+-	layout profilov,
+-	bottom tab navigation,
+-	farebná schéma aplikácie.
 ________________________________________
 
 Debugging a riešenie problémov
 
 LLM boli použité pri:
-•	riešení navigation problémov,
-•	opravách React Native chýb,
-•	Firebase debuggingu,
-•	keyboard handling problémoch,
-•	state management problémoch.
+-	riešení navigation problémov,
+-	opravách React Native chýb,
+-	Firebase debuggingu,
+-	keyboard handling problémoch,
+-	state management problémoch.
 ________________________________________
 
 Dokumentácia
 
 LLM pomohli aj pri:
-•	tvorbe README dokumentácie,
-•	štruktúrovaní technickej dokumentácie
+-	tvorbe README dokumentácie,
+-	štruktúrovaní technickej dokumentácie
 ________________________________________
 
 Prínosy využitia LLM
@@ -260,11 +246,11 @@ ________________________________________
 Učenie nových technológií
 
 Pri práci s LLM sme sa naučili:
-•	React Navigation,
-•	Firebase realtime funkcionalitu,
-•	keyboard handling v React Native,
-•	moderné UI patterns,
-•	prácu s Expo Image Picker.
+-	React Navigation,
+-	Firebase realtime funkcionalitu,
+-	keyboard handling v React Native,
+-	moderné UI patterns,
+-	prácu s Expo Image Picker.
 ________________________________________
 
 Lepší debugging
@@ -281,9 +267,9 @@ ________________________________________
 Nutnosť kontroly výstupu
 
 Generovaný kód bolo potrebné:
-•	testovať,
-•	upravovať,
-•	prispôsobovať architektúre projektu.
+-	testovať,
+-	upravovať,
+-	prispôsobovať architektúre projektu.
 ________________________________________
 
 Kompatibilita knižníc
@@ -295,30 +281,30 @@ Vlastné zhodnotenie
 
 Práca s LLM nástrojmi bola veľmi prínosná. Počas projektu sme si osvojili nové postupy pri vývoji mobilných aplikácií a naučili sa efektívnejšie pracovať s modernými AI asistovanými nástrojmi.
 Najväčším prínosom bola možnosť:
-•	rýchlejšie experimentovať,
-•	jednoduchšie debugovať chyby,
-•	navrhovať modernejší UI dizajn,
-•	efektívnejšie implementovať funkcionality.
+-	rýchlejšie experimentovať,
+-	jednoduchšie debugovať chyby,
+-	navrhovať modernejší UI dizajn,
+-	efektívnejšie implementovať funkcionality.
 Zároveň sme si uvedomili, že AI nenahrádza programátora, ale funguje ako podporný nástroj, ktorý vyžaduje kontrolu, testovanie a pochopenie generovaného kódu.
 ________________________________________
 
-9. Budúce rozšírenia projektu
+7. Budúce rozšírenia projektu
 
 Možné budúce funkcionality:
-•	push notifications,
-•	dark mode,
-•	Google Maps integrácia,
-•	event categories,
-•	QR invites,
-•	online status používateľov,
-•	typing indicators,
-•	Firebase Storage pre cloud upload fotografií,
-•	animácie a transitions.
+-	push notifications,
+-	dark mode,
+-	Google Maps integrácia,
+-	event categories,
+-	QR invites,
+-	online status používateľov,
+-	typing indicators,
+-	Firebase Storage pre cloud upload fotografií,
+-	animácie a transitions.
 ________________________________________
 
-10. Autori projektu
+8. Autori projektu
 
 Semester projekt vytvorený v rámci predmetu mobilné systémy a sociálne siete.
 Autori:
-•	Tomáš Klukay
-•	Adrian Kopányi
+Tomáš Klukay
+Adrian Kopányi
