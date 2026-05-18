@@ -122,24 +122,24 @@ Inštalácia dependencies
 
 npm install
 
-# Navigation
+Navigation
 npm install @react-navigation/bottom-tabs
 npm install @react-navigation/drawer
 
-# React Native dependencies
+React Native dependencies
 npm install react-native-screens
 npm install react-native-safe-area-context
 npm install react-native-gesture-handler
 npm install react-native-reanimated
 
-# Expo
+Expo
 npm install expo-image-picker
 npx expo install expo-image-picker
 
-# Icons
+Icons
 npm install @expo/vector-icons
 
-# Babel
+Babel
 npm install --save-dev babel-preset-expo
 ________________________________________
 
