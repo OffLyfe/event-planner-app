@@ -1,3 +1,4 @@
+<img width="968" height="968" alt="logo" src="https://github.com/user-attachments/assets/906c693d-aa21-4278-a958-c9b53f9825e6" />
 MEETR – Mobile Social Event Planner
 Moderná mobilná sociálna aplikácia na vytváranie eventov, spájanie ľudí a realtime komunikáciu.
 ________________________________________
@@ -9,6 +10,7 @@ MEETR je mobilná aplikácia vytvorená pomocou React Native a Expo frameworku, 
 -	pripájať sa na eventy ostatných používateľov,
 -	komunikovať cez realtime chat,
 -	pridávať si priateľov,
+
 -	zobrazovať eventy priateľov,
 -	budovať jednoduchú sociálnu sieť.
 Projekt bol vytvorený so zameraním na:
