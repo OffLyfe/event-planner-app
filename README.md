@@ -1,5 +1,7 @@
 <img width="968" height="968" alt="logo" src="https://github.com/user-attachments/assets/906c693d-aa21-4278-a958-c9b53f9825e6" />
+
 MEETR – Mobile Social Event Planner
+
 Moderná mobilná sociálna aplikácia na vytváranie eventov, spájanie ľudí a realtime komunikáciu.
 
 ________________________________________
@@ -7,6 +9,7 @@ ________________________________________
 1.	Stručný popis projektu
 
 MEETR je mobilná aplikácia vytvorená pomocou React Native a Expo frameworku, ktorá umožňuje používateľom:
+
 -	vytvárať udalosti,
 -	pripájať sa na eventy ostatných používateľov,
 -	komunikovať cez realtime chat,
@@ -106,7 +109,9 @@ ________________________________________
 4. Návod na spustenie projektu
 
 Požiadavky
+
 Pred spustením projektu je potrebné mať nainštalované:
+
 -	Node.js
 -	npm
 -	Expo CLI
@@ -117,7 +122,9 @@ ________________________________________
 Inštalácia projektu
 
 Naklonovanie repozitára
+
 git clone <repository-url>
+
 cd event-planner-app
 ________________________________________
 
@@ -125,80 +132,109 @@ Inštalácia dependencies
 
 npm install
 
-Navigation
 npm install @react-navigation/bottom-tabs
+
 npm install @react-navigation/drawer
 
 React Native dependencies
+
 npm install react-native-screens
+
 npm install react-native-safe-area-context
+
 npm install react-native-gesture-handler
+
 npm install react-native-reanimated
 
-Expo
 npm install expo-image-picker
+
 npx expo install expo-image-picker
 
-Icons
 npm install @expo/vector-icons
 
-Babel
 npm install --save-dev babel-preset-expo
+
 ________________________________________
 
 Babel konfigurácia
 
 V koreňovom adresári projektu sa nachádza:
+
 babel.config.js
+
 Obsah:
-module.exports = function(api) {
+
+module.exports = function(api){
+
   api.cache(true);
 
   return {
+  
     presets: ["babel-preset-expo"],
+
     plugins: ["react-native-reanimated/plugin"],
+    
   };
+  
 };
 ________________________________________
 
 Spustenie projektu
 
 Vyčistenie cache:
+
 npx expo start -c
 
 Následne:
+
 -	naskenovať QR kód pomocou Expo Go,
+  
 -	alebo spustiť Android/iOS emulátor.
 ________________________________________
 
 5. Firebase konfigurácia
 
 Projekt používa:
+
 -	Firebase Authentication,
 -	Firebase Firestore Database.
 
 Je potrebné:
+
 1.	vytvoriť Firebase projekt,
+   
 2.	povoliť Authentication (Email/Password),
+   
 3.	vytvoriť Firestore Database,
+   
 4.	vložiť Firebase config do:
+   
 firebaseConfig.js
 
 Príklad:
 
 const firebaseConfig = {
+
   apiKey: "YOUR_API_KEY",
+  
   authDomain: "YOUR_DOMAIN",
+  
   projectId: "YOUR_PROJECT_ID",
+  
   storageBucket: "YOUR_BUCKET",
+  
   messagingSenderId: "YOUR_SENDER_ID",
+  
   appId: "YOUR_APP_ID",
+  
 };
+
 ________________________________________
 
 6. Reflexia využitia LLM nástrojov
 
 Pri vývoji projektu boli využitý ChatGPT v platenej verzii.
+
 ________________________________________
 
 Oblasti využitia LLM
@@ -211,6 +247,7 @@ LLM nástroje boli použité pri:
 -	implementácii realtime chatu,
 -	implementácii Firebase logiky,
 -	refaktoringu UI komponentov.
+  
 ________________________________________
 
 UI/UX návrh
@@ -308,6 +345,9 @@ ________________________________________
 8. Autori projektu
 
 Semester projekt vytvorený v rámci predmetu mobilné systémy a sociálne siete.
+
 Autori:
+
 Tomáš Klukay
+
 Adrian Kopányi
